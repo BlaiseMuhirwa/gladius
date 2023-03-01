@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 #include <cstdint>
 
@@ -10,9 +10,8 @@ https://arxiv.org/pdf/1706.03762.pdf
 
 namespace fortis::transformer {
 
-
-class MultiHeadAttention{
-    explicit MultiHeadAttention(uint32_t attention_blocks);
+class MultiHeadAttention {
+  explicit MultiHeadAttention(uint32_t attention_blocks);
 };
 
 } // namespace fortis::transformer
