@@ -20,4 +20,19 @@
         have a hard time having a recurrent neural network builder, for instance. 
         These work on top of expressions and operators and provide easy-to-use libraries. 
         More discussion on builders below. 
-    - 
+    - ComputationGraph: Expressions are part of an implicit computation graph object. 
+        Fortis currently assumes that only one computation graph will exist at a time. 
+        From the user's perspective, we create a computation graph for each new training 
+        example. 
+
+### Execution Flow in Fortis
+    1. Create a model object 
+    2. Add necessary parameters and lookup parameters to the model 
+    3. Create a trainer object and associate it with the model 
+    4. For each input sample, do:
+        - Create a computation graph, and populate it by building an expression representing
+            the desired computation for this example. 
+        - Calculate the results of the computation forward through the graph. 
+        - If training, calculate an expression for the loss function and use its `backward`
+            function to back-propagate. 
+        - Use the trainer to update parameters in the model. 
