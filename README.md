@@ -12,6 +12,9 @@ Note: This repository is meant for educational purposes.
     - Question Answering
     - Text Classification 
 
+### Features
+    - Support for data-parallel training 
+    - SGD and Adam 
 
 ### Metrics to Implement 
     - F1 score
