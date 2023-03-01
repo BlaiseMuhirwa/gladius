@@ -36,3 +36,19 @@
         - If training, calculate an expression for the loss function and use its `backward`
             function to back-propagate. 
         - Use the trainer to update parameters in the model. 
+
+### More on the Dynamic Computation Graph (DCG)
+    The DCG is implemented as a Directed Acyclic Graph (DAG) where a vertex represents a  variable
+    with a certain shape containing parameters, constants, input data, and, most commonly, the result
+    of applying a single elementary function to the vertex's inputs. The shape of the vertex is 
+    inferred when the vertex object is created based on the shapes of the vertex's inputs. 
+
+    - Vertex object: Each vertex maintains a list of incoming edges stored as an ordered list of 
+        references to other vertices which represent the inputs to the function computed by the 
+        vertex. Note: vertices representing parameters, constants, and random variate generators
+        have no inputs. `Expression` objects are thin wrappers around vertices, which abstract 
+        away from this behind-the-scenes detail of the computation graph structure and behave 
+        syntactically like a tensor value. 
+
+        Each vertex has forward and backward functions defined. 
+
