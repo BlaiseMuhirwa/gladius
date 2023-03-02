@@ -1,8 +1,10 @@
 #pragma once
 
-#include <vector>
+#include "utils.hpp"
+#include <cereal/access.hppp>
+#include <ios>
 #include <memory>
-#include <cereal/archives/binary.hpp>
+#include <vector>
 
 namespace fortis::parameters {
 
@@ -14,10 +16,17 @@ struct Parameter {
   std::vector<std::vector<float>> value() const { return _value; }
 
 private:
+  Parameter(){};
   uint32_t _axes;
   std::vector<std::vector<float>> _value;
+
+  friend class cereal::access;
+
+  template <typename Archive> void serialize(Archive &archive) {
+    archive(_axes, _value);
+  }
 };
 
-using ParameterPtr = std::shared_ptr<Parameter>;
+using ParameterPointer = std::shared_ptr<Parameter>;
 
 } // namespace fortis::parameters

@@ -1,14 +1,20 @@
 
-#include "parameters.h"
+#include "parameters.hpp"
+#include <cassert>
 #include <memory>
 
 using fortis::parameters::Parameter;
-using fortis::parameters::ParameterPtr;
+using fortis::parameters::ParameterPointer;
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
 
-    std::vector<std::vector<float>> input{};
-    ParameterPtr ptr = std::make_shared<Parameter>(input);
+  std::vector<std::vector<float>> input{};
+  ParameterPointer parameter = std::make_shared<Parameter>(input);
 
-    return 0;
+  parameter->save("param.out");
+  auto loaded_param = Parameter::load("param.out");
+
+  assert(parameter->axes() == loaded_param->axes());
+
+  return 0;
 }

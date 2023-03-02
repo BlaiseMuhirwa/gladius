@@ -12,10 +12,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # set(CMAKE_CXX17_EXTENSION_COMPILE_OPTION "-std=gnu++17")
 
 ## set compiler flags 
-set(CMAKE_CXX_FLAGS " -std=c++17 -O3 -W")
+set(CMAKE_CXX_FLAGS " -std=c++17 -O3 -Wall")
 
 include_directories(".")
 include_directories(${CMAKE_BINARY_DIR})
+
+## This requires having a CMakeLists.txt file in the subdirectory 
 add_subdirectory(src)
 
 ## Add dependencies 
@@ -24,6 +26,7 @@ add_subdirectory(dependencies/cereal EXCLUDE_FROM_ALL)
 
 include_directories(dependencies)
 include_directories(src)
+include_directories(src/cereal)
 
 
 
@@ -45,7 +48,7 @@ target_include_directories(
     ${PROJECT_SOURCE_DIR}/src/operators
 )
 set_target_properties(fortis PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_link_libraries(fortis PUBLIC cereal::cereal)
+target_link_libraries(fortis PUBLIC)
 
 message("===================================================")
 message("\tProject Directory = ${PROJECT_SOURCE_DIR}")
