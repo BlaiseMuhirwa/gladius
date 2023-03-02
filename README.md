@@ -6,7 +6,7 @@ moment, but features will be added progressively. The goal is to have a
 well-maintained C++ library with wrappers for Rust (and potentially Python
 if need be).
 
-Note: This repository is meant for educational purposes. 
+Note: The design for this library is inspired by [DyNet](https://arxiv.org/pdf/1701.03980.pdf).
 
 
 ### Tasks to Consider

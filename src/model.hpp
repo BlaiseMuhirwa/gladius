@@ -24,6 +24,9 @@ class Model : public std::enable_shared_from_this<Model> {
   ParameterPointer getParameterByName(const std::string &name);
   LookupParameterPointer getLookupParameterByName(const std::string &name);
 
+  void save(const std::string& file_name) const;
+  static std::shared_ptr<Model> load(const std::string& file_name);
+
 private:
   friend class cereal::access;
   template <typename Archive> void serialize(Archive &archive) { archive(); }
