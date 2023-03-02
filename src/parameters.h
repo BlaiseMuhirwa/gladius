@@ -1,6 +1,8 @@
 #pragma once
 
 #include <vector>
+#include <memory>
+#include <cereal/access.hpp>
 
 namespace fortis::parameters {
 
@@ -10,11 +12,12 @@ struct Parameter {
 
   constexpr uint32_t axes() const { return _axes; }
   std::vector<std::vector<float>> value() const { return _value; }
-  throw;
 
 private:
   uint32_t _axes;
   std::vector<std::vector<float>> _value;
 };
+
+using ParameterPtr = std::shared_ptr<Parameter>;
 
 } // namespace fortis::parameters
