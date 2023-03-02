@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <memory>
-#include <cereal/access.hpp>
+#include <cereal/archives/binary.hpp>
 
 namespace fortis::parameters {
 

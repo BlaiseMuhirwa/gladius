@@ -23,6 +23,7 @@ set(SKIP_PERFORMANCE_COMPARISON ON)
 add_subdirectory(dependencies/cereal EXCLUDE_FROM_ALL)
 
 include_directories(dependencies)
+include_directories(src)
 
 
 
@@ -49,6 +50,8 @@ target_link_libraries(fortis PUBLIC cereal::cereal)
 message("===================================================")
 message("\tProject Directory = ${PROJECT_SOURCE_DIR}")
 message("\tC++ Compiler = ${CMAKE_CXX_COMPILER}")
+message("\tCMake Source Dir = ${CMAKE_CURRENT_SOURCE_DIR}")
+message("\tCMake Binary Dir = ${CMAKE_BINARY_DIR}")
 message("\tSource Files = ")
 foreach(SOURCE_FILE IN LISTS FORTIS_SOURCES)
     message("\t ${SOURCE_FILE}")
