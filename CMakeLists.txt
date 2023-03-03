@@ -12,13 +12,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # set(CMAKE_CXX17_EXTENSION_COMPILE_OPTION "-std=gnu++17")
 
 ## set compiler flags 
-set(CMAKE_CXX_FLAGS " -std=c++17 -O3 -Wall")
+set(CMAKE_CXX_FLAGS " -std=c++17 -O3")
 
 include_directories(".")
 include_directories(${CMAKE_BINARY_DIR})
 
 ## This requires having a CMakeLists.txt file in the subdirectory 
 add_subdirectory(src)
+add_subdirectory(src/operations)
 
 ## Add dependencies 
 set(SKIP_PERFORMANCE_COMPARISON ON)
@@ -27,10 +28,9 @@ add_subdirectory(dependencies/cereal EXCLUDE_FROM_ALL)
 include_directories(dependencies)
 include_directories(src)
 include_directories(src/cereal)
+include_directories(src/operations)
+include_directories(src/comp_graph)
 
-
-
-add_executable(main ${PROJECT_SOURCE_DIR}/src/main.cc)
 
 set(FORTIS_SOURCES
     ${PROJECT_SOURCE_DIR}/src/trainer.cc 
@@ -45,10 +45,12 @@ target_include_directories(
     PRIVATE 
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/comp_graph
-    ${PROJECT_SOURCE_DIR}/src/operators
+    ${PROJECT_SOURCE_DIR}/src/operations
 )
 set_target_properties(fortis PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(fortis PUBLIC)
+
+add_executable(main ${PROJECT_SOURCE_DIR}/src/main.cc)
 
 message("===================================================")
 message("\tProject Directory = ${PROJECT_SOURCE_DIR}")

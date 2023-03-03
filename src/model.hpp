@@ -1,7 +1,7 @@
 
-#include "cereal/access.hpp"
 #include "lookup_parameters.hpp"
 #include "parameters.hpp"
+#include <cereal/access.hpp>
 #include <memory>
 
 namespace fortis {
@@ -16,16 +16,17 @@ class Model : public std::enable_shared_from_this<Model> {
 
   explicit Model(ParameterPointer &parameter){};
 
-  void addParameter(const ParameterPointer &parameter);
+  ParameterPointer addParameter(const ParameterPointer &parameter);
 
-  void addLookupParameter(const LookupParameterPointer &lookup_parameter);
+  LookupParameterPointer
+  addLookupParameter(const LookupParameterPointer &lookup_parameter);
   void updateParameterGradients();
 
   ParameterPointer getParameterByName(const std::string &name);
   LookupParameterPointer getLookupParameterByName(const std::string &name);
 
-  void save(const std::string& file_name) const;
-  static std::shared_ptr<Model> load(const std::string& file_name);
+  void save(const std::string &file_name) const;
+  static std::shared_ptr<Model> load(const std::string &file_name);
 
 private:
   friend class cereal::access;

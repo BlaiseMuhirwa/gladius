@@ -12,13 +12,13 @@
         represents a subcomputation in the computation graph. For instance, a `Parameter` 
         object can be added to the computation graph, resulting in an expression W or b. 
 
-    - Operators: These are functions that act on expressions and return other expressions. 
-        Crucially, they are not objects. Fortis defines many different operators, including
+    - Operations: These are functions that act on expressions and return other expressions. 
+        Crucially, they are not objects. Fortis defines many different operations, including
         addition, multiplication, softmax, tanh, etc. 
     - Builder classes: These define interfaces for building different networks. In our case, we
         will be only interested in implementing the transformer network, but one should not 
         have a hard time having a recurrent neural network builder, for instance. 
-        These work on top of expressions and operators and provide easy-to-use libraries. 
+        These work on top of expressions and operations and provide easy-to-use libraries. 
         More discussion on builders below. 
     - ComputationGraph: Expressions are part of an implicit computation graph object. 
         Fortis currently assumes that only one computation graph will exist at a time. 
