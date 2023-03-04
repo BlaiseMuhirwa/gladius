@@ -14,9 +14,7 @@ using VertexPointer = std::shared_ptr<Vertex>;
 
 struct Expression {
 
-  void operator()(const VertexPointer& vertex) {
-    _vertex = std::move(vertex);
-  }
+  void operator()(const VertexPointer &vertex) { _vertex = std::move(vertex); }
   VertexPointer _vertex;
 };
 
@@ -24,7 +22,7 @@ class Vertex {
 public:
   Vertex(OperationPointer &operation) : _operation(operation) {}
 
-  void operator()(std::vector<VertexPointer>& incoming_edges) {
+  void operator()(std::vector<VertexPointer> &incoming_edges) {
     _edges = std::move(incoming_edges);
   }
 
@@ -41,6 +39,5 @@ private:
     archive(_operation, _edges);
   }
 };
-
 
 } // namespace fortis

@@ -1,21 +1,39 @@
 #pragma once
 
 #include <cereal/access.hpp>
+#include <cereal/types/polymorphic.hpp>
+#include <memory>
 #include <string>
+#include <vector>
 
-namespace fortis::operations {
+namespace fortis {
 
-class Operation {
+class Vertex;
+using VertexPointer = std::shared_ptr<Vertex>;
+
+struct Expression {
+
+  void operator()(VertexPointer &vertex) { _value = std::move(vertex); }
+  VertexPointer _value;
+};
+
+class Vertex {
 public:
-  virtual ~Operation() = default;
+  virtual ~Vertex() = default;
+
+  virtual void forward();
+  virtual void backward();
+
+protected:
+  virtual std::shared_ptr<Expression> applyOperation();
 
 private:
+  std::vector<Expression> _edges;
   friend class cereal::access;
   template <typename Archive> void serialize(Archive &archive) {
     (void)archive;
   }
 };
 
-using OperationPointer = std::shared_ptr<Operation>;
 
-} // namespace fortis::operations
+} // namespace fortis
