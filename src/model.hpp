@@ -12,6 +12,8 @@ using parameters::Parameter;
 using parameters::ParameterPointer;
 
 class Model : public std::enable_shared_from_this<Model> {
+
+public:
   Model(){};
 
   explicit Model(ParameterPointer &parameter){};

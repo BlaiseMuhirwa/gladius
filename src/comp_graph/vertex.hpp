@@ -7,18 +7,33 @@
 
 namespace fortis {
 
-using fortis::operations::Operation;
 using fortis::operations::OperationPointer;
-class Vertex {
 
-  explicit Vertex(OperationPointer &operation) : _operation(operation) {}
+class Vertex;
+using VertexPointer = std::shared_ptr<Vertex>;
+
+struct Expression {
+
+  void operator()(const VertexPointer& vertex) {
+    _vertex = std::move(vertex);
+  }
+  VertexPointer _vertex;
+};
+
+class Vertex {
+public:
+  Vertex(OperationPointer &operation) : _operation(operation) {}
+
+  void operator()(std::vector<VertexPointer>& incoming_edges) {
+    _edges = std::move(incoming_edges);
+  }
 
   void forward();
   void backward();
 
 private:
   OperationPointer _operation;
-  std::vector<float> _edges;
+  std::vector<std::shared_ptr<Vertex>> _edges;
 
   Vertex() {}
   friend class cereal::access;
@@ -27,6 +42,5 @@ private:
   }
 };
 
-using VertexPointer = std::shared_ptr<Vertex>;
 
 } // namespace fortis

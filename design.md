@@ -52,3 +52,14 @@
 
         Each vertex has forward and backward functions defined. 
 
+### Efficient Computations
+    1. Use Eigen for computations
+    
+
+
+### Fixing WiFi Issues
+    1. WiFi does not have a valid IP address. Look into fixing this. 
+    2. 
+
+
+

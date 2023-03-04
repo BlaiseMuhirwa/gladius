@@ -6,6 +6,7 @@
 namespace fortis::operations {
 
 class Operation {
+public:
   virtual ~Operation() = default;
 
 private:

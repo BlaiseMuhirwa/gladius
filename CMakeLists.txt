@@ -6,10 +6,8 @@ project(fortis_nn LANGUAGES CXX)
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-# set(CMAKE_C_COMPILER /usr/bin/clang)
-# set(CMAKE_CXX_COMPILER /usr/bin/clang++)
-# set(CMAKE_CXX17_STANDARD_COMPILE_OPTION "-std=c++17")
-# set(CMAKE_CXX17_EXTENSION_COMPILE_OPTION "-std=gnu++17")
+set(CMAKE_C_COMPILER /usr/bin/clang)
+set(CMAKE_CXX_COMPILER /usr/bin/clang++)
 
 ## set compiler flags 
 set(CMAKE_CXX_FLAGS " -std=c++17 -O3")
