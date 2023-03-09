@@ -23,13 +23,14 @@ class TanHActivation : public Vertex,
    *          TanH(x) = \frac{1 - \exp(-2x)}{1 + \exp(-2x)}
    **/
 public:
-  explicit TanHActivation(std::vector<VertexPointer> &incoming_edges)
-      : _incoming_edges(incoming_edges) {
+
+  explicit TanHActivation(const std::vector<VertexPointer> &incoming_edges)
+      : _incoming_edges(std::move(incoming_edges)) {
     if (_incoming_edges.size() != 1) {
       throw std::runtime_error(
-          std::format("TanH activation function expects a single vector as "
-                      "input. Received {} vectors",
-                      std::to_string(_incoming_edges.size())));
+          "TanH activation function expects a single vector as "
+          "input. Received " +
+          std::to_string(_incoming_edges.size()) + " vectors.");
     }
   }
 
@@ -38,6 +39,9 @@ public:
     assert(_forward_output.empty());
     applyOperation();
   }
+
+  TanHActivation& operator=(const TanHActivation&) = delete;
+  TanHActivation& operator=(TanHActivation&&) = delete;
 
   /**
    * The local gradient for TanH is expressed as follows:
