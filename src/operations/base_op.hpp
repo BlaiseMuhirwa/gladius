@@ -43,7 +43,7 @@ public:
    * via the chain rule.
    */
   virtual void backward();
-  virtual std::vector<std::vector<float>> getOuput();
+  virtual std::vector<std::vector<float>> getOuput() const;
 
 protected:
   virtual std::shared_ptr<Vertex> applyOperation();

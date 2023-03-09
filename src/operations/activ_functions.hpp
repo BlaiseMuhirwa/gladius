@@ -35,7 +35,7 @@ public:
 
   void forward() final {
     assert(_incoming_edges.size() != 0);
-    assert(_output.size() == 0);
+    assert(_forward_output.empty());
     applyOperation();
   }
 
@@ -46,7 +46,23 @@ public:
    * simplifying, we get that d(tanh(x))/dx = 1 - [tanh(x)^2]
    *
    */
-  void backward() final {}
+  void backward() final {
+    assert(!_forward_output.empty());
+    assert(_gradients.empty());
+
+    auto vector_size = _forward_output.size();
+
+    for (uint32_t neuron_index = 0; neuron_index < vector_size;
+         neuron_index++) {
+      auto current_activation = _forward_output[neuron_index];
+      float gradient = 1 - (current_activation * current_activation);
+      _gradients.push_back(gradient);
+    }
+  }
+
+  std::vector<std::vector<float>> getOuput() const final {
+    return {_forward_output};
+  }
 
 private:
   std::shared_ptr<Vertex> applyOperation() final {
@@ -58,17 +74,18 @@ private:
     for (uint32_t neuron_index = 0; neuron_index < size; neuron_index++) {
       float exponential_term = exp(-2 * input_vector[neuron_index]);
       float tanh_activation = (1 - exponential_term) / (1 + exponential_term);
-      _output.push_back(tanh_activation);
+      _forward_output.push_back(tanh_activation);
     }
     return shared_from_this();
   }
 
   std::vector<VertexPointer> _incoming_edges;
-  std::vector<float> _output;
+  std::vector<float> _forward_output;
+  std::vector<float> _gradients;
 
   friend class cereal::access;
   template <typename Archive> void serialize(Archive &archive) {
-    archive(cereal::base_class<Vertex>(this), _incoming_edges, _output);
+    archive(cereal::base_class<Vertex>(this), _incoming_edges, _forward_output);
   }
 };
 
