@@ -39,6 +39,13 @@ public:
     applyOperation();
   }
 
+  /**
+   * The local gradient for TanH is expressed as follows:
+   * - numerator: 4 * exp(-2x)
+   * - denomiator: (1+exp(-2x))^2
+   * simplifying, we get that d(tanh(x))/dx = 1 - [tanh(x)^2]
+   *
+   */
   void backward() final {}
 
 private:
@@ -48,13 +55,10 @@ private:
     auto input_vector = incoming_edge->getOuput()[0];
     auto size = input_vector.size();
 
-#pragma omp parallel for default(none) shared(_output)
-
     for (uint32_t neuron_index = 0; neuron_index < size; neuron_index++) {
       float exponential_term = exp(-2 * input_vector[neuron_index]);
       float tanh_activation = (1 - exponential_term) / (1 + exponential_term);
-#pragma omp critical
-      { _output.push_back(tanh_activation); }
+      _output.push_back(tanh_activation);
     }
     return shared_from_this();
   }
@@ -64,7 +68,7 @@ private:
 
   friend class cereal::access;
   template <typename Archive> void serialize(Archive &archive) {
-    archive(cereal::base_class<Vertex>(this), _incoming_edges);
+    archive(cereal::base_class<Vertex>(this), _incoming_edges, _output);
   }
 };
 
