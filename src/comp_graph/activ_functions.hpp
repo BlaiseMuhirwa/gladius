@@ -1,5 +1,5 @@
 
-#include "base_op.hpp"
+#include "vertex.hpp"
 #include <cassert>
 #include <cereal/access.hpp>
 #include <cereal/types/base_class.hpp>
@@ -10,9 +10,9 @@
 #include <memory>
 #include <stdexcept>
 
-namespace fortis {
-using fortis::Expression;
-using fortis::Vertex;
+namespace fortis::comp_graph {
+using fortis::comp_graph::Expression;
+using fortis::comp_graph::Vertex;
 
 class TanHActivation : public Vertex,
                        public std::enable_shared_from_this<TanHActivation> {
@@ -92,6 +92,6 @@ private:
   }
 };
 
-} // namespace fortis
+} // namespace fortis::comp_graph
 
-CEREAL_REGISTER_TYPE(fortis::Vertex)
+CEREAL_REGISTER_TYPE(fortis::comp_graph::Vertex)

@@ -15,15 +15,18 @@ struct Parameter {
   constexpr uint32_t axes() const { return _axes; }
   std::vector<std::vector<float>> value() const { return _value; }
 
+  std::vector<std::vector<float>> getGradients() const { return _gradients; }
+
 private:
   Parameter(){};
   uint32_t _axes;
   std::vector<std::vector<float>> _value;
+  std::vector<std::vector<float>> _gradients;
 
   friend class cereal::access;
 
   template <typename Archive> void serialize(Archive &archive) {
-    archive(_axes, _value);
+    archive(_axes, _value, _gradients);
   }
 };
 

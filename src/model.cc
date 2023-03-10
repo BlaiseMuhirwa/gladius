@@ -70,9 +70,6 @@ static std::shared_ptr<Model> load(const std::string &file_name) {
   return deserialized_model;
 }
 
-void Model::updateParameterGradients() {
-    return;
-}
-
+void Model::updateParameterGradients() { return; }
 
 } // namespace fortis
