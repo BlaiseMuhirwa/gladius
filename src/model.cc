@@ -21,6 +21,7 @@ Parameter &Model::addParameter(uint32_t dimension) {
 
   auto parameter =
       std::shared_ptr<Parameter>(new Parameter({parameter_vector}));
+  _parameters.emplace_back(*parameter);
   return *parameter;
 }
 
@@ -46,18 +47,21 @@ Parameter &Model::addParameter(const std::vector<uint32_t> &dimensions) {
   auto parameter =
       std::shared_ptr<Parameter>(new Parameter(std::move(parameter_vectors)));
 
+  _parameters.emplace_back(*parameter);
   return *parameter;
 }
 
 void Model::save(const std::string &file_name) const {
-  std::ofstream file_stream = fortis::handle_ofstream(file_name, std::ios::binary);
+  std::ofstream file_stream =
+      fortis::handle_ofstream(file_name, std::ios::binary);
   cereal::BinaryOutputArchive output_archive(file_stream);
 
   output_archive(*this);
 }
 
 static std::shared_ptr<Model> load(const std::string &file_name) {
-  std::ifstream file_stream = fortis::handle_ifstream(file_name, std::ios::binary);
+  std::ifstream file_stream =
+      fortis::handle_ifstream(file_name, std::ios::binary);
 
   cereal::BinaryInputArchive input_archive(file_stream);
   std::shared_ptr<Model> deserialized_model(new Model());
@@ -65,5 +69,10 @@ static std::shared_ptr<Model> load(const std::string &file_name) {
 
   return deserialized_model;
 }
+
+void Model::updateParameterGradients() {
+    return;
+}
+
 
 } // namespace fortis
