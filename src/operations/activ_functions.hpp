@@ -23,7 +23,6 @@ class TanHActivation : public Vertex,
    *          TanH(x) = \frac{1 - \exp(-2x)}{1 + \exp(-2x)}
    **/
 public:
-
   explicit TanHActivation(const std::vector<VertexPointer> &incoming_edges)
       : _incoming_edges(std::move(incoming_edges)) {
     if (_incoming_edges.size() != 1) {
@@ -40,8 +39,8 @@ public:
     applyOperation();
   }
 
-  TanHActivation& operator=(const TanHActivation&) = delete;
-  TanHActivation& operator=(TanHActivation&&) = delete;
+  TanHActivation &operator=(const TanHActivation &) = delete;
+  TanHActivation &operator=(TanHActivation &&) = delete;
 
   /**
    * The local gradient for TanH is expressed as follows:
@@ -52,7 +51,7 @@ public:
    */
   void backward() final {
     assert(!_forward_output.empty());
-    assert(_gradients.empty());
+    assert(_local_gradients.empty());
 
     auto vector_size = _forward_output.size();
 
@@ -60,7 +59,7 @@ public:
          neuron_index++) {
       auto current_activation = _forward_output[neuron_index];
       float gradient = 1 - (current_activation * current_activation);
-      _gradients.push_back(gradient);
+      _local_gradients.push_back(gradient);
     }
   }
 
@@ -85,7 +84,7 @@ private:
 
   std::vector<VertexPointer> _incoming_edges;
   std::vector<float> _forward_output;
-  std::vector<float> _gradients;
+  std::vector<float> _local_gradients;
 
   friend class cereal::access;
   template <typename Archive> void serialize(Archive &archive) {

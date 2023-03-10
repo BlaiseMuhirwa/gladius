@@ -27,6 +27,6 @@ private:
   }
 };
 
-using ParameterPointer = std::shared_ptr<Parameter>;
+using ParameterPointer = std::unique_ptr<Parameter>;
 
 } // namespace fortis::parameters

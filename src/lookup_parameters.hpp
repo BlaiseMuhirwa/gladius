@@ -7,5 +7,5 @@ struct LookupParameter {
   LookupParameter(){};
 };
 
-using LookupParameterPointer = std::shared_ptr<LookupParameter>;
+using LookupParameterPointer = std::unique_ptr<LookupParameter>;
 } // namespace fortis::parameters
