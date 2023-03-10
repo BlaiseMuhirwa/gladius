@@ -9,7 +9,7 @@
 namespace fortis::parameters {
 
 struct Parameter {
-  explicit Parameter(const std::vector<std::vector<float>> &input)
+  explicit Parameter(std::vector<std::vector<float>> &&input)
       : _axes(input.size() == 1 ? 1 : 2), _value(input) {}
 
   constexpr uint32_t axes() const { return _axes; }

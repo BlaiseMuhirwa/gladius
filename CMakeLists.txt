@@ -10,7 +10,7 @@ set(CMAKE_C_COMPILER /usr/bin/clang)
 set(CMAKE_CXX_COMPILER /usr/bin/clang++)
 
 ## set compiler flags 
-set(CMAKE_CXX_FLAGS " -std=c++17 -O3")
+set(CMAKE_CXX_FLAGS " -std=c++17 -O3 -lbenchmark")
 
 include_directories(".")
 include_directories(${CMAKE_BINARY_DIR})

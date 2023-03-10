@@ -10,7 +10,7 @@
 
 #ifdef RUN_BENCHMARKS
 #include <benchmark/benchmark.h>
-#endif 
+#endif
 
 namespace fortis {
 
@@ -25,7 +25,10 @@ public:
   Model(){};
 
   Parameter &addParameter(uint32_t dimension);
-  Parameter& addParameter(const std::vector<uint32_t>& dimensions);
+
+  // For now we assume that we only have 2 dimensions for the vector
+  // TODO: Relax this assumption
+  Parameter &addParameter(const std::vector<uint32_t> &dimensions);
 
   LookupParameter &
   addLookupParameter(const LookupParameterPointer &lookup_parameter);
@@ -38,20 +41,17 @@ public:
   static std::shared_ptr<Model> load(const std::string &file_name);
 
 private:
-
 #ifdef RUN_BENCHMARKS
-  void registerBenchmarkToRun() {
+  static void registerBenchmarkToRun() {
     BENCHMARK(addParameter);
     BENCHMARK(addLookupParameter);
     BENCHMARK(save);
     BENCHMARK(load);
   }
 
-  void launchBenchmarks() {
-    BENCHMARK_MAIN();
-  }
+  void launchBenchmarks() { BENCHMARK_MAIN(); }
 
-#endif 
+#endif
   std::vector<std::variant<Parameter, LookupParameter>> _parameters;
 
   friend class cereal::access;
