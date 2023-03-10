@@ -26,6 +26,9 @@ struct Expression {
 
 class Vertex {
 public:
+  virtual std::shared_ptr<Vertex>
+  setIncomingEdges(std::vector<VertexPointer> &edges) = 0;
+
   virtual ~Vertex() = default;
 
   /**
@@ -42,7 +45,7 @@ public:
    * of the loss function with respect to the given parameter
    * via the chain rule.
    */
-  virtual void backward() = 0;
+  virtual void backward(const std::vector<std::vector<float>> &gradient) = 0;
   virtual std::vector<std::vector<float>> getOuput() const = 0;
 
 protected:

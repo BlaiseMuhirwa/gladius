@@ -13,7 +13,7 @@ public:
       : _parameter(std::move(parameter)) {}
 
   void forward() final { return; }
-  void backward() final { return; }
+  void backward(const std::vector<std::vector<float>> &gradient) final { return; }
   std::vector<std::vector<float>> getOutput() const final {
     return _parameter->value();
   }
@@ -21,6 +21,7 @@ public:
 private:
   std::shared_ptr<Vertex> applyOperation() { return shared_from_this(); }
   std::shared_ptr<Parameter> _parameter;
+  std::vector<float> _local_gradients;
 
   friend class cereal::access;
   template <typename Archive> void serialize(Archive &archive) {

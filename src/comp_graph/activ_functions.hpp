@@ -49,9 +49,10 @@ public:
    * simplifying, we get that d(tanh(x))/dx = 1 - [tanh(x)^2]
    *
    */
-  void backward() final {
+  void backward(const std::vector<std::vector<float>> &gradient) final {
+    assert(!gradient.empty());
     assert(!_forward_output.empty());
-    assert(_local_gradients.empty());
+    assert(_gradient.empty());
 
     auto vector_size = _forward_output.size();
 
@@ -59,7 +60,7 @@ public:
          neuron_index++) {
       auto current_activation = _forward_output[neuron_index];
       float gradient = 1 - (current_activation * current_activation);
-      _local_gradients.push_back(gradient);
+      _gradient.push_back(gradient);
     }
   }
 
@@ -84,7 +85,7 @@ private:
 
   std::vector<VertexPointer> _incoming_edges;
   std::vector<float> _forward_output;
-  std::vector<float> _local_gradients;
+  std::vector<float> _gradient;
 
   friend class cereal::access;
   template <typename Archive> void serialize(Archive &archive) {
