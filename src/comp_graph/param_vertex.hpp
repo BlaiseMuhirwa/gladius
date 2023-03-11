@@ -13,7 +13,9 @@ public:
       : _parameter(std::move(parameter)) {}
 
   void forward() final { return; }
-  void backward(const std::vector<std::vector<float>> &gradient) final { return; }
+  void backward(const std::vector<std::vector<float>> &gradient) final {
+    return;
+  }
   std::vector<std::vector<float>> getOutput() const final {
     return _parameter->value();
   }
