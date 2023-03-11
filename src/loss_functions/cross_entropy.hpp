@@ -30,9 +30,8 @@ struct CrossEntropyLoss {
     assert(_logits.size() == _label.size());
 
     float log_sum_exp = 0.0f;
-    std::for_each(_logits.begin(), _logits.end(), [&log_sum_exp](float logit) {
-      log_sum_exp += exp(logit);
-    });
+    std::for_each(_logits.begin(), _logits.end(),
+                  [&log_sum_exp](float logit) { log_sum_exp += exp(logit); });
     log_sum_exp = log(log_sum_exp);
     float second_term = 0.0f;
     for (uint32_t logit_index = 0; logit_index < _logits.size();

@@ -14,16 +14,26 @@ public:
 
   void forward() final { return; }
   void backward(const std::vector<std::vector<float>> &gradient) final {
-    return;
+    /**
+     * At the time the gradient reaches this parameter, there is no further
+     * backpropagation needed. This is the actual gradient update for the 
+     * current parameter. You can convince yourself of this by reading through
+     * this tutorial on backpropagation. 
+     * https://www.cs.toronto.edu/~rgrosse/courses/csc321_2017/readings/L06%20Backpropagation.pdf
+     */
+     _parameter_gradient = std::move(gradient);
   }
   std::vector<std::vector<float>> getOutput() const final {
     return _parameter->value();
+  }
+  std::vector<std::vector<float>> getParameterGradient() const {
+    return _parameter_gradient;
   }
 
 private:
   std::shared_ptr<Vertex> applyOperation() { return shared_from_this(); }
   std::shared_ptr<Parameter> _parameter;
-  std::vector<float> _local_gradients;
+  std::vector<std::vector<float>> _parameter_gradient;
 
   friend class cereal::access;
   template <typename Archive> void serialize(Archive &archive) {

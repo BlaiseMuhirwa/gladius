@@ -14,6 +14,12 @@ namespace fortis::comp_graph {
 using fortis::comp_graph::Expression;
 using fortis::comp_graph::Vertex;
 
+class ReLUActiation : public Vertex,
+                      public std::enable_shared_from_this<ReLUActiation> {
+public:
+private:
+};
+
 class TanHActivation : public Vertex,
                        public std::enable_shared_from_this<TanHActivation> {
   /**
@@ -49,7 +55,7 @@ public:
    * simplifying, we get that d(tanh(x))/dx = 1 - [tanh(x)^2]
    *
    */
-  void backward(const std::vector<std::vector<float>> &gradient) final {
+  void backward(const std::vector<float> &gradient) final {
     assert(!gradient.empty());
     assert(!_forward_output.empty());
     assert(_gradient.empty());
@@ -59,8 +65,9 @@ public:
     for (uint32_t neuron_index = 0; neuron_index < vector_size;
          neuron_index++) {
       auto current_activation = _forward_output[neuron_index];
-      float gradient = 1 - (current_activation * current_activation);
-      _gradient.push_back(gradient);
+      float tanh_derivative = 1 - (current_activation * current_activation);
+      float total_derivative = gradient[neuron_index] * tanh_derivative;
+      _gradient.push_back(total_derivative);
     }
   }
 
