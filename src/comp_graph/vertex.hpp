@@ -52,7 +52,6 @@ protected:
   virtual std::shared_ptr<Vertex> applyOperation() = 0;
 
 private:
-  std::vector<std::vector<float>> _output;
   friend class cereal::access;
   template <typename Archive> void serialize(Archive &archive) {
     (void)archive;

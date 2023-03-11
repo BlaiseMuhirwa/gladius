@@ -13,20 +13,24 @@ struct Parameter {
       : _axes(input.size() == 1 ? 1 : 2), _value(input) {}
 
   constexpr uint32_t axes() const { return _axes; }
-  std::vector<std::vector<float>> value() const { return _value; }
+  std::vector<std::vector<float>> getValue() const { return _value; }
 
-  std::vector<std::vector<float>> getGradients() const { return _gradients; }
+  std::vector<std::vector<float>> getGradient() const { return _gradient; }
+
+  void setGradient(std::vector<std::vector<float>> &gradient) {
+    _gradient = std::move(gradient);
+  }
 
 private:
   Parameter(){};
   uint32_t _axes;
   std::vector<std::vector<float>> _value;
-  std::vector<std::vector<float>> _gradients;
+  std::vector<std::vector<float>> _gradient;
 
   friend class cereal::access;
 
   template <typename Archive> void serialize(Archive &archive) {
-    archive(_axes, _value, _gradients);
+    archive(_axes, _value, _gradient);
   }
 };
 

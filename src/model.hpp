@@ -32,10 +32,13 @@ public:
 
   LookupParameter &
   addLookupParameter(const LookupParameterPointer &lookup_parameter);
-  void updateParameterGradients();
 
   ParameterPointer getParameterByName(const std::string &name);
   LookupParameterPointer getLookupParameterByName(const std::string &name);
+
+  std::vector<std::variant<Parameter, LookupParameter>> getParameters() const {
+    return _parameters;
+  }
 
   void save(const std::string &file_name) const;
   static std::shared_ptr<Model> load(const std::string &file_name);
