@@ -20,8 +20,8 @@ class ReLUActivation : public Vertex,
                        public std::enable_shared_from_this<ReLUActivation> {
 public:
   ReLUActivation() {}
-  ReLUActivation &operator=(const TanHActivation &) = delete;
-  ReLUActivation &operator=(TanHActivation &&) = delete;
+  ReLUActivation &operator=(const ReLUActivation &) = delete;
+  ReLUActivation &operator=(ReLUActivation &&) = delete;
   void operator()(const std::vector<VertexPointer> incoming_edges) {
     if (_incoming_edges.size() != 1) {
       throw std::runtime_error(
