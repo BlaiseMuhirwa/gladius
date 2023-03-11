@@ -1,4 +1,5 @@
 #include <cereal/access.hpp>
+#include <cereal/types/polymorphic.hpp>
 #include <memory>
 #include <src/comp_graph/vertex.hpp>
 #include <vector>
@@ -28,8 +29,10 @@ private:
   friend class cereal::access;
 
   template <typename Archive> void serialize(Archive &archive) {
-    archive(_input);
+    archive(cereal::base_class<Vertex>(this), _input);
   }
 };
 
 } // namespace fortis::comp_graph
+
+CEREAL_REGISTER_TYPE(fortis::comp_graph::InputVertex)

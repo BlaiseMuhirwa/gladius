@@ -1,5 +1,6 @@
 #include "types/base_class.hpp"
 #include <cereal/access.hpp>
+#include <cereal/types/polymorphic.hpp>
 #include <memory>
 #include <src/comp_graph/vertex.hpp>
 #include <src/parameters.hpp>
