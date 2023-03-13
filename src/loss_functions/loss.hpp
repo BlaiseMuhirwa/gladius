@@ -12,6 +12,12 @@ static float softmax(float current_logit, const std::vector<float> &input) {
   return exp(current_logit) / sum;
 }
 
+struct Loss {
+  ~Loss() = default;
+
+  virtual float getValue() = 0;
+};
+
 /**
  * Here we use the cross-entropy loss always with the softmax activation
  * For more about the cross-entropy loss with the Softmax activation
@@ -19,12 +25,12 @@ static float softmax(float current_logit, const std::vector<float> &input) {
  * https://d2l.ai/chapter_linear-classification/softmax-regression.html#the-softmax
  *
  */
-struct CrossEntropyLoss {
+struct CrossEntropyLoss : public Loss {
   CrossEntropyLoss(const std::vector<float> &logits,
                    const std::vector<uint32_t> &label)
       : _logits(std::move(logits)), _label(std::move(label)) {}
 
-  float value() {
+  float getValue() final {
     assert(!_logits.empty());
     assert(!_label.empty());
     assert(_logits.size() == _label.size());

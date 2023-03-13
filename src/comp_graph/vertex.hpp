@@ -48,6 +48,12 @@ public:
   virtual void backward(const std::vector<std::vector<float>> &gradient) = 0;
   virtual std::vector<std::vector<float>> getOuput() const = 0;
 
+  /**
+   * Returns the name of the corresponding operation implemented by
+   * the vertex.
+   */
+  virtual std::string getName() = 0;
+
 protected:
   virtual std::shared_ptr<Vertex> applyOperation() = 0;
 

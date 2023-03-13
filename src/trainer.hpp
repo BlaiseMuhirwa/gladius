@@ -8,7 +8,7 @@ namespace fortis::trainers {
 
 class GradientDescentTrainer {
 public:
-  GradientDescentTrainer(std::shared_ptr<Model> &model, float learning_rate)
+  GradientDescentTrainer(std::shared_ptr<Model> model, float learning_rate)
       : _model(std::move(model)), _learning_rate(learning_rate) {}
 
   void takeDescentStep() {
@@ -17,8 +17,8 @@ public:
       auto computed_gradient = parameter->getGradient().at(0);
       auto parameter_value = parameter->getValue();
       if (computed_gradient.empty()) {
-        throw std::runtime_error(
-            "Error backpropagating the gradients through the network.");
+        auto error = "Error backpropagating the gradients through the network.";
+        throw std::runtime_error(std::string(error));
       }
       if (parameter_value.size() != computed_gradient.size()) {
         throw std::runtime_error("Invalid dimensions for the parameter and "

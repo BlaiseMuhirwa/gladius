@@ -36,6 +36,9 @@ public:
     assert(!_incoming_edges.empty());
     assert(_forward_output.empty());
     applyOperation();
+
+    auto size_to_allocate = _forward_output.size();
+    _gradient.reserve(size_to_allocate);
   }
 
   void backward(const std::vector<float> &gradient) final {
@@ -54,13 +57,15 @@ public:
       }
       float relu_derivative = (current_activation > 0) ? 1 : 0;
       float total_derivative = gradient[neuron_index] * relu_derivative;
-      _gradient.push_back(total_derivative);
+      _gradient[neuron_index] += total_derivative;
     }
   }
 
   std::vector<std::vector<float>> getOuput() const final {
     return {_forward_output};
   }
+
+  std::string getName() final { return "relu"; }
 
 private:
   std::shared_ptr<Vertex> applyOperation() final {
@@ -113,6 +118,9 @@ public:
     assert(_incoming_edges.size() != 0);
     assert(_forward_output.empty());
     applyOperation();
+
+    auto size_to_allocate = _forward_output.size();
+    _gradient.reserve(size_to_allocate);
   }
 
   /**
@@ -134,13 +142,15 @@ public:
       auto current_activation = _forward_output[neuron_index];
       float tanh_derivative = 1 - (current_activation * current_activation);
       float total_derivative = gradient[neuron_index] * tanh_derivative;
-      _gradient.push_back(total_derivative);
+      _gradient[neuron_index] += total_derivative;
     }
   }
 
   std::vector<std::vector<float>> getOuput() const final {
     return {_forward_output};
   }
+
+  std::string getName() final { return "tanh"; }
 
 private:
   std::shared_ptr<Vertex> applyOperation() final {
