@@ -1,5 +1,6 @@
 #pragma once
 
+#include <_types/_uint32_t.h>
 #include <cereal/access.hpp>
 #include <cereal/types/polymorphic.hpp>
 #include <memory>
@@ -48,6 +49,10 @@ public:
    */
   virtual void backward(const std::optional<std::vector<std::vector<float>>>
                             &gradient = std::nullopt) = 0;
+
+  /**
+   * Returns the output of the forward pass through the vertex.
+   */
   virtual std::vector<std::vector<float>> getOutput() const = 0;
 
   /**
@@ -55,6 +60,19 @@ public:
    * the vertex.
    */
   virtual std::string getName() = 0;
+
+  /**
+   * Returns the gradient of the loss function with respect to
+   * the operation computed by the vertex.
+   */
+  virtual std::vector<std::vector<float>> getGradient() const = 0;
+
+  /**
+   * Returns the size of the output vector computed by the vertex.
+   * TODO: Add support for multiple output dimension with std::tuple
+   * and variadic templates.
+   */
+  virtual constexpr uint32_t getOutputDimension() const = 0;
 
 protected:
   virtual std::shared_ptr<Vertex> applyOperation() = 0;

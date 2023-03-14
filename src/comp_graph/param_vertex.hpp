@@ -36,7 +36,7 @@ public:
     return _parameter->getValue();
   }
 
-  std::string getName() final { return "param"; }
+  std::string getName() final { return "Param"; }
 
 private:
   std::shared_ptr<Vertex> applyOperation() { return shared_from_this(); }

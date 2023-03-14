@@ -31,7 +31,16 @@ class CrossEntropyLoss final
       public std::enable_shared_from_this<CrossEntropyLoss> {
   CrossEntropyLoss(const std::vector<float> &logits,
                    const std::vector<uint32_t> &label)
-      : _logits(std::move(logits)), _label(std::move(label)) {}
+      : _logits(std::move(logits)), _label(std::move(label)) {
+
+    if (_logits.size() != _label.size()) {
+      throw std::invalid_argument(
+          "The size of the logits vector must be equal to the size of the "
+          "label vector. Logits have size " +
+          std::to_string(_logits.size()) + " while the label vector has size " +
+          std::to_string(_label.size()));
+    }
+  }
 
   std::shared_ptr<Vertex>
   setIncomingEdges(std::vector<VertexPointer> &edges) final;
@@ -39,7 +48,6 @@ class CrossEntropyLoss final
   void forward() final {
     assert(!_logits.empty());
     assert(!_label.empty());
-    assert(_logits.size() == _label.size());
 
     applyOperation();
   }
@@ -57,22 +65,28 @@ class CrossEntropyLoss final
                                   "not have a gradient parameter.");
     }
     assert(_gradient.empty());
+    std::vector<float> computed_gradient_vector;
+    computed_gradient_vector.reserve(_logits.size());
 
     for (uint32_t logit_index = 0; logit_index < _logits.size();
          logit_index++) {
       auto derivative =
           softmax(_logits[logit_index], _logits) - _label[logit_index];
-      _gradient.emplace_back(derivative);
+      computed_gradient_vector.emplace_back(derivative);
     }
+    _gradient.emplace_back(std::move(computed_gradient_vector));
   }
 
   std::string getName() final { return "CrossEntropyLoss"; }
 
-  std::vector<std::vector<float>> getOutput() const final { return {}; }
-
-  constexpr float getValue() const {
+  std::vector<std::vector<float>> getOutput() const final {
     assert(_loss.has_value());
-    return _loss.value();
+    return {{_loss.value()}};
+  }
+
+  std::vector<std::vector<float>> getGradient() const final {
+    assert(!_gradient.empty());
+    return _gradient;
   }
 
 private:
@@ -93,7 +107,7 @@ private:
   std::vector<float> _logits;
   std::vector<uint32_t> _label;
   std::optional<float> _loss;
-  std::vector<float> _gradient;
+  std::vector<std::vector<float>> _gradient;
 
   template <typename Archive> void serialize(Archive &archive) {
     archive(_logits, _label, _loss, _gradient);

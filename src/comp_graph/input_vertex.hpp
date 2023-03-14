@@ -8,16 +8,24 @@ namespace fortis::comp_graph {
 
 using fortis::comp_graph::Vertex;
 
-class InputVertex : public Vertex,
-                    public std::enable_shared_from_this<InputVertex> {
+class InputVertex final : public Vertex,
+                          public std::enable_shared_from_this<InputVertex> {
 public:
   explicit InputVertex(std::shared_ptr<std::vector<float>> input)
       : _input(std::move(input)) {}
 
+  std::shared_ptr<Vertex>
+  setIncomingEdges(std::vector<VertexPointer> &edges) final;
+
   void forward() final { return; }
-  void backward(const std::vector<std::vector<float>> &gradient) final {
+  void backward(const std::optional<std::vector<std::vector<float>>> &gradient =
+                    std::nullopt) final {
     return;
   }
+
+  std::string getName() final { return "Input"; }
+
+  std::vector<std::vector<float>> getGradient() const final { return {}; }
 
   std::vector<std::vector<float>> getOutput() const final { return {*_input}; }
 
