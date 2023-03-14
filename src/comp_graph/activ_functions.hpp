@@ -22,7 +22,15 @@ public:
   ReLUActivation() {}
   ReLUActivation &operator=(const ReLUActivation &) = delete;
   ReLUActivation &operator=(ReLUActivation &&) = delete;
-  void operator()(const std::vector<VertexPointer> incoming_edges) {
+
+  /**
+   * We return a shared pointer to the underlying object because typically
+   * this provideds us a clean interface for subsequent calls after object
+   * construction. For instance, we might need to launch a forward pass
+   * after calling function call operator.
+   */
+  std::shared_ptr<ReLUActivation>
+  operator()(const std::vector<VertexPointer> incoming_edges) {
     if (_incoming_edges.size() != 1) {
       throw std::runtime_error(
           "ReLU activation function expects a single vector as "
@@ -30,6 +38,7 @@ public:
           std::to_string(_incoming_edges.size()) + " vectors.");
     }
     _incoming_edges = std::move(incoming_edges);
+    return shared_from_this();
   }
 
   void forward() final {
@@ -91,8 +100,9 @@ private:
   }
 };
 
-class TanHActivation : public Vertex,
-                       public std::enable_shared_from_this<TanHActivation> {
+class TanHActivation final
+    : public Vertex,
+      public std::enable_shared_from_this<TanHActivation> {
   /**
    * The TanH activation computes the hyperbolic tangent function
    * We recall that for any input value x, TanH(x) is given by
@@ -104,6 +114,13 @@ public:
 
   TanHActivation &operator=(const TanHActivation &) = delete;
   TanHActivation &operator=(TanHActivation &&) = delete;
+
+  /**
+   * We return a shared pointer to the underlying object because typically
+   * this provideds us a clean interface for subsequent calls after object
+   * construction. For instance, we might need to launch a forward pass
+   * after calling function call operator.
+   */
   void operator()(const std::vector<VertexPointer> incoming_edges) {
     if (_incoming_edges.size() != 1) {
       throw std::runtime_error(
@@ -119,8 +136,14 @@ public:
     assert(_forward_output.empty());
     applyOperation();
 
+    /**
+     * We allocate the size of the _gradient vector during the forward
+     * pass since we want to use std::vector::operator[], which may be
+     * invoked multiple times during the backward pass. This will happen
+     * when a vertex has at least two child vertices.
+     */
     auto size_to_allocate = _forward_output.size();
-    _gradient.reserve(size_to_allocate);
+    _gradient = std::vector<float>(size_to_allocate);
   }
 
   /**
@@ -146,17 +169,17 @@ public:
     }
   }
 
-  std::vector<std::vector<float>> getOuput() const final {
+  std::vector<std::vector<float>> getOutput() const final {
     return {_forward_output};
   }
 
-  std::string getName() final { return "tanh"; }
+  std::string getName() final { return "TanH"; }
 
 private:
   std::shared_ptr<Vertex> applyOperation() final {
 
     auto incoming_edge = _incoming_edges.at(0);
-    auto input_vector = incoming_edge->getOuput().at(0);
+    auto input_vector = incoming_edge->getOutput().at(0);
     auto size = input_vector.size();
 
     for (uint32_t neuron_index = 0; neuron_index < size; neuron_index++) {

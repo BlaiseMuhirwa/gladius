@@ -3,6 +3,7 @@
 #include <cereal/access.hpp>
 #include <cereal/types/polymorphic.hpp>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -45,8 +46,9 @@ public:
    * of the loss function with respect to the given parameter
    * via the chain rule.
    */
-  virtual void backward(const std::vector<std::vector<float>> &gradient) = 0;
-  virtual std::vector<std::vector<float>> getOuput() const = 0;
+  virtual void backward(const std::optional<std::vector<std::vector<float>>>
+                            &gradient = std::nullopt) = 0;
+  virtual std::vector<std::vector<float>> getOutput() const = 0;
 
   /**
    * Returns the name of the corresponding operation implemented by

@@ -8,11 +8,18 @@
 namespace fortis::comp_graph {
 using fortis::parameters::Parameter;
 
-class ParameterVertex : public Vertex,
-                        public std::enable_shared_from_this<ParameterVertex> {
+class ParameterVertex final
+    : public Vertex,
+      public std::enable_shared_from_this<ParameterVertex> {
 public:
   explicit ParameterVertex(std::shared_ptr<Parameter> parameter)
       : _parameter(std::move(parameter)) {}
+
+  std::shared_ptr<Vertex>
+  setIncomingEdges(std::vector<VertexPointer> &edges) final {
+    (void)edges;
+    return shared_from_this();
+  }
 
   void forward() final { return; }
   void backward(const std::vector<std::vector<float>> &gradient) final {
@@ -26,7 +33,7 @@ public:
     _parameter->setGradient(gradient);
   }
   std::vector<std::vector<float>> getOutput() const final {
-    return _parameter->value();
+    return _parameter->getValue();
   }
 
   std::string getName() final { return "param"; }

@@ -5,6 +5,7 @@
 #include <set>
 #include <src/comp_graph/vertex.hpp>
 #include <src/loss_functions/loss.hpp>
+#include <stdexcept>
 #include <vector>
 
 namespace fortis::comp_graph {
@@ -13,14 +14,17 @@ using fortis::loss_functions::Loss;
 
 class Graph {
 public:
-  Graph() : _vertices({}), _logits({}), _loss_value(std::nullopt) {}
+  Graph()
+      : topologically_sorted_vertices({}), _logits({}),
+        _loss_value(std::nullopt) {}
   Graph(const Graph &) = delete;
   Graph(Graph &&) = delete;
 
-  void addVertex(VertexPointer vertex) { _vertices.insert(std::move(vertex)); }
+  void addVertex(VertexPointer vertex) {
+    topologically_sorted_vertices.emplace_back(std::move(vertex));
+  }
 
   void launchForwardPass() {
-    auto topologically_sorted_vertices = computeTopologicalOrdering();
     auto graph_size = topologically_sorted_vertices.size();
 
     for (uint32_t vertex_index = 0; vertex_index < graph_size; vertex_index++) {
@@ -34,14 +38,15 @@ public:
   void evaluateLossFunctionValue(std::unique_ptr<Loss> loss_function) {
     _loss_value = loss_function->getValue();
   }
-  void launchBackwardPass();
-
-private:
-  std::vector<VertexPointer> computeTopologicalOrdering() {
-    std::unordered_set<uint32_t> visited_vertices;
+  void launchBackwardPass() {
+    if (!_loss_value.has_value()) {
+      throw std::runtime_error(
+          "You must compute the value of the loss function first.");
+    }
   }
 
-  std::set<VertexPointer> _vertices;
+private:
+  std::vector<VertexPointer> topologically_sorted_vertices;
   std::vector<std::vector<float>> _logits;
 
   std::optional<float> _loss_value;

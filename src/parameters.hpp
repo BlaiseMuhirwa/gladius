@@ -17,7 +17,7 @@ struct Parameter {
 
   std::vector<std::vector<float>> getGradient() const { return _gradient; }
 
-  void setGradient(std::vector<std::vector<float>> &gradient) {
+  void setGradient(const std::vector<std::vector<float>> &gradient) {
     _gradient = std::move(gradient);
   }
 
