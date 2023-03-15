@@ -33,16 +33,25 @@ public:
   void forward() final {
     assert(_output.empty());
     applyOperation();
+
+    auto size_to_allocate = _output.size();
+    _gradient = std::vector<float>(size_to_allocate);
   }
   void backward(const std::optional<std::vector<std::vector<float>>> &gradient =
                     std::nullopt) final {
+    assert(_gradient.empty());
+    // Let the output of the summation be given by z = x + y
+    // Then, observe that dz/dy = 1 and dz/dx = 1
+    // We compute those derivates as follows
+    std::vector<float> computed_gradient_vector(_output.size(), 1.0);
+
     return;
   }
 
   std::string getName() final { return "Input"; }
 
   std::vector<std::vector<float>> getGradient() const final {
-    return _gradient;
+    return {_gradient};
   }
 
   constexpr uint32_t getOutputDimension() const final {
@@ -66,7 +75,7 @@ private:
   VertexPointer _left_input;
   VertexPointer _right_input;
   std::vector<float> _output;
-  std::vector<std::vector<float>> _gradient;
+  std::vector<float> _gradient;
 
   Summation() {}
   friend class cereal::access;

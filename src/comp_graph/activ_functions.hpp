@@ -16,8 +16,9 @@ using fortis::comp_graph::Vertex;
 
 class SigmoidActivation;
 
-class ReLUActivation : public Vertex,
-                       public std::enable_shared_from_this<ReLUActivation> {
+class ReLUActivation final
+    : public Vertex,
+      public std::enable_shared_from_this<ReLUActivation> {
 public:
   ReLUActivation() {}
   ReLUActivation &operator=(const ReLUActivation &) = delete;
@@ -74,7 +75,7 @@ public:
     return {_forward_output};
   }
 
-  std::string getName() final { return "relu"; }
+  std::string getName() final { return "Relu"; }
 
 private:
   std::shared_ptr<Vertex> applyOperation() final {
@@ -136,12 +137,6 @@ public:
     assert(_forward_output.empty());
     applyOperation();
 
-    /**
-     * We allocate the size of the _gradient vector during the forward
-     * pass since we want to use std::vector::operator[], which may be
-     * invoked multiple times during the backward pass. This will happen
-     * when a vertex has at least two child vertices.
-     */
     auto size_to_allocate = _forward_output.size();
     _gradient = std::vector<float>(size_to_allocate);
   }

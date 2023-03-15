@@ -1,8 +1,2 @@
-clang-format -i src/*.hpp
-clang-format -i src/*.cc 
-clang-format -i src/comp_graph/*.hpp
-clang-format -i src/comp_graph/*.cc 
-clang-format -i src/operations/*.hpp
-clang-format -i src/operations/*.cc 
-clang-format -i src/loss_functions/*.cc 
-clang-format -i src/loss_functions/*.hpp 
+
+find src -type f -not -path "*cereal*" -iname *.hpp -o -iname *.cc | xargs clang-format -i  
