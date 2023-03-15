@@ -42,9 +42,6 @@ class CrossEntropyLoss final
     }
   }
 
-  std::shared_ptr<Vertex>
-  setIncomingEdges(std::vector<VertexPointer> &edges) final;
-
   void forward() final {
     assert(!_logits.empty());
     assert(!_label.empty());
@@ -65,29 +62,24 @@ class CrossEntropyLoss final
                                   "not have a gradient parameter.");
     }
     assert(_gradient.empty());
-    std::vector<float> computed_gradient_vector;
-    computed_gradient_vector.reserve(_logits.size());
+    _gradient = std::vector<float>(_logits.size());
 
     for (uint32_t logit_index = 0; logit_index < _logits.size();
          logit_index++) {
       auto derivative =
           softmax(_logits[logit_index], _logits) - _label[logit_index];
-      computed_gradient_vector.emplace_back(derivative);
+      _gradient[logit_index] = derivative;
     }
-    _gradient.emplace_back(std::move(computed_gradient_vector));
   }
 
   std::string getName() final { return "CrossEntropyLoss"; }
 
-  std::vector<std::vector<float>> getOutput() const final {
+  std::vector<std::vector<float>> getOutput() const override {
     assert(_loss.has_value());
     return {{_loss.value()}};
   }
 
-  std::vector<std::vector<float>> getGradient() const final {
-    assert(!_gradient.empty());
-    return _gradient;
-  }
+  constexpr uint32_t getOutputDimension() const final { return 1; }
 
 private:
   std::shared_ptr<Vertex> applyOperation() final {
@@ -107,7 +99,6 @@ private:
   std::vector<float> _logits;
   std::vector<uint32_t> _label;
   std::optional<float> _loss;
-  std::vector<std::vector<float>> _gradient;
 
   template <typename Archive> void serialize(Archive &archive) {
     archive(_logits, _label, _loss, _gradient);

@@ -12,10 +12,7 @@ class InputVertex final : public Vertex,
                           public std::enable_shared_from_this<InputVertex> {
 public:
   explicit InputVertex(std::shared_ptr<std::vector<float>> input)
-      : _input(std::move(input)) {}
-
-  std::shared_ptr<Vertex>
-  setIncomingEdges(std::vector<VertexPointer> &edges) final;
+      : _output(std::move(input)) {}
 
   void forward() final { return; }
   void backward(const std::optional<std::vector<std::vector<float>>> &gradient =
@@ -23,21 +20,25 @@ public:
     return;
   }
 
+  constexpr uint32_t getOutputDimension() const final {
+    return _output->size();
+  }
+
   std::string getName() final { return "Input"; }
 
-  std::vector<std::vector<float>> getGradient() const final { return {}; }
-
-  std::vector<std::vector<float>> getOutput() const final { return {*_input}; }
+  std::vector<std::vector<float>> getOutput() const override {
+    return {*_output};
+  }
 
 private:
   std::shared_ptr<Vertex> applyOperation() final { return shared_from_this(); }
-  std::shared_ptr<std::vector<float>> _input;
+  std::shared_ptr<std::vector<float>> _output;
 
   InputVertex() {}
   friend class cereal::access;
 
   template <typename Archive> void serialize(Archive &archive) {
-    archive(cereal::base_class<Vertex>(this), _input);
+    archive(cereal::base_class<Vertex>(this), _output);
   }
 };
 

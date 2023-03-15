@@ -44,60 +44,61 @@ public:
 
   void forward() final {
     assert(!_incoming_edges.empty());
-    assert(_forward_output.empty());
+    assert(_output.empty());
     applyOperation();
-
-    auto size_to_allocate = _forward_output.size();
-    _gradient.reserve(size_to_allocate);
   }
 
-  void backward(const std::vector<float> &gradient) final {
-    assert(!gradient.empty());
-    assert(!_forward_output.empty());
-    assert(_gradient.empty());
+  void backward(
+      const std::optional<std::vector<std::vector<float>>> &gradient) final {
+    assert(!gradient.has_value());
+    assert(!_output.empty());
 
-    auto vector_size = _forward_output.size();
+    auto vector_size = _output.size();
+
+    if (_gradient.empty()) {
+      _gradient = std::vector<float>(vector_size);
+    }
 
     for (uint32_t neuron_index = 0; neuron_index < vector_size;
          neuron_index++) {
-      auto current_activation = _forward_output[neuron_index];
+      auto current_activation = _output[neuron_index];
       if (!current_activation) {
         throw std::runtime_error(
             "RelU activation is not differentiable at 0.0");
       }
       float relu_derivative = (current_activation > 0) ? 1 : 0;
-      float total_derivative = gradient[neuron_index] * relu_derivative;
+      float total_derivative =
+          gradient.value().at(0).at(neuron_index) * relu_derivative;
       _gradient[neuron_index] += total_derivative;
     }
   }
 
-  std::vector<std::vector<float>> getOuput() const final {
-    return {_forward_output};
-  }
+  std::string getName() final { return "ReLU"; }
 
-  std::string getName() final { return "Relu"; }
+  constexpr uint32_t getOutputDimension() const final {
+    assert(!_output.empty());
+    return _output.size();
+  }
 
 private:
   std::shared_ptr<Vertex> applyOperation() final {
     auto incoming_edge = _incoming_edges.at(0);
-    auto input_vector = incoming_edge->getOuput().at(0);
+    auto input_vector = incoming_edge->getOutput().at(0);
     auto size = input_vector.size();
 
     for (uint32_t neuron_index = 0; neuron_index < size; neuron_index++) {
       float relu_activation =
           input_vector[neuron_index] > 0 ? input_vector[neuron_index] : 0;
-      _forward_output.push_back(relu_activation);
+      _output.push_back(relu_activation);
     }
     return shared_from_this();
   }
 
   std::vector<VertexPointer> _incoming_edges;
-  std::vector<float> _forward_output;
-  std::vector<float> _gradient;
 
   friend class cereal::access;
   template <typename Archive> void serialize(Archive &archive) {
-    archive(cereal::base_class<Vertex>(this), _incoming_edges, _forward_output);
+    archive(cereal::base_class<Vertex>(this), _incoming_edges, _output);
   }
 };
 
@@ -134,11 +135,8 @@ public:
 
   void forward() final {
     assert(_incoming_edges.size() != 0);
-    assert(_forward_output.empty());
+    assert(_output.empty());
     applyOperation();
-
-    auto size_to_allocate = _forward_output.size();
-    _gradient = std::vector<float>(size_to_allocate);
   }
 
   /**
@@ -148,27 +146,33 @@ public:
    * simplifying, we get that d(tanh(x))/dx = 1 - [tanh(x)^2]
    *
    */
-  void backward(const std::vector<float> &gradient) final {
-    assert(!gradient.empty());
-    assert(!_forward_output.empty());
-    assert(_gradient.empty());
+  void backward(
+      const std::optional<std::vector<std::vector<float>>> &gradient) final {
+    assert(!gradient.has_value());
+    assert(!_output.empty());
 
-    auto vector_size = _forward_output.size();
+    auto vector_size = _output.size();
+
+    if (_gradient.empty()) {
+      _gradient = std::vector<float>(vector_size);
+    }
 
     for (uint32_t neuron_index = 0; neuron_index < vector_size;
          neuron_index++) {
-      auto current_activation = _forward_output[neuron_index];
+      auto current_activation = _output[neuron_index];
       float tanh_derivative = 1 - (current_activation * current_activation);
-      float total_derivative = gradient[neuron_index] * tanh_derivative;
+      float total_derivative =
+          gradient.value().at(0).at(neuron_index) * tanh_derivative;
       _gradient[neuron_index] += total_derivative;
     }
   }
 
-  std::vector<std::vector<float>> getOutput() const final {
-    return {_forward_output};
-  }
-
   std::string getName() final { return "TanH"; }
+
+  constexpr uint32_t getOutputDimension() const final {
+    assert(!_output.empty());
+    return _output.size();
+  }
 
 private:
   std::shared_ptr<Vertex> applyOperation() final {
@@ -180,18 +184,16 @@ private:
     for (uint32_t neuron_index = 0; neuron_index < size; neuron_index++) {
       float exponential_term = exp(-2 * input_vector[neuron_index]);
       float tanh_activation = (1 - exponential_term) / (1 + exponential_term);
-      _forward_output.push_back(tanh_activation);
+      _output.push_back(tanh_activation);
     }
     return shared_from_this();
   }
 
   std::vector<VertexPointer> _incoming_edges;
-  std::vector<float> _forward_output;
-  std::vector<float> _gradient;
 
   friend class cereal::access;
   template <typename Archive> void serialize(Archive &archive) {
-    archive(cereal::base_class<Vertex>(this), _incoming_edges, _forward_output);
+    archive(cereal::base_class<Vertex>(this), _incoming_edges, _output);
   }
 };
 

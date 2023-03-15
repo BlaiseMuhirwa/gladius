@@ -13,16 +13,12 @@ class ParameterVertex final
       public std::enable_shared_from_this<ParameterVertex> {
 public:
   explicit ParameterVertex(std::shared_ptr<Parameter> parameter)
-      : _parameter(std::move(parameter)) {}
-
-  std::shared_ptr<Vertex>
-  setIncomingEdges(std::vector<VertexPointer> &edges) final {
-    (void)edges;
-    return shared_from_this();
-  }
+      : _parameter(std::move(parameter)),
+        _output_dimension(_parameter->getValue().size()) {}
 
   void forward() final { return; }
-  void backward(const std::vector<std::vector<float>> &gradient) final {
+  void backward(
+      const std::optional<std::vector<std::vector<float>>> &gradient) final {
     /**
      * At the time the gradient reaches this parameter, there is no further
      * backpropagation needed. This is the actual gradient update for the
@@ -30,10 +26,15 @@ public:
      * this tutorial on backpropagation.
      * https://www.cs.toronto.edu/~rgrosse/courses/csc321_2017/readings/L06%20Backpropagation.pdf
      */
-    _parameter->setGradient(gradient);
+    assert(gradient.has_value());
+    _parameter->setGradient(gradient.value());
   }
   std::vector<std::vector<float>> getOutput() const final {
     return _parameter->getValue();
+  }
+
+  constexpr uint32_t getOutputDimension() const final {
+    return _output_dimension;
   }
 
   std::string getName() final { return "Param"; }
@@ -41,6 +42,7 @@ public:
 private:
   std::shared_ptr<Vertex> applyOperation() { return shared_from_this(); }
   std::shared_ptr<Parameter> _parameter;
+  uint32_t _output_dimension;
 
   friend class cereal::access;
   template <typename Archive> void serialize(Archive &archive) {

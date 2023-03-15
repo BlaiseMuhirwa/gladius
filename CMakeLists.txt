@@ -34,10 +34,10 @@ set(FORTIS_SOURCES
     ${PROJECT_SOURCE_DIR}/src/trainer.cc 
     ${PROJECT_SOURCE_DIR}/src/model.cc
     ${PROJECT_SOURCE_DIR}/src/attention.cc
-    ${PROJECT_SOURCE_DIR}/src/comp_graph/vertex.cc 
 )
 
 add_library(fortis STATIC ${FORTIS_SOURCES})
+
 target_include_directories(
     fortis
     PRIVATE 

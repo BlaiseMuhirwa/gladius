@@ -27,38 +27,32 @@ public:
     _output.reserve(_left_input->getOutputDimension());
   }
 
-  std::shared_ptr<Vertex>
-  setIncomingEdges(std::vector<VertexPointer> &edges) final;
-
   void forward() final {
     assert(_output.empty());
     applyOperation();
-
-    auto size_to_allocate = _output.size();
-    _gradient = std::vector<float>(size_to_allocate);
   }
   void backward(const std::optional<std::vector<std::vector<float>>> &gradient =
                     std::nullopt) final {
-    assert(_gradient.empty());
-    // Let the output of the summation be given by z = x + y
-    // Then, observe that dz/dy = 1 and dz/dx = 1
-    // We compute those derivates as follows
-    std::vector<float> computed_gradient_vector(_output.size(), 1.0);
+    assert(gradient.has_value());
 
-    return;
+    // Checks if this is the first time backpropagating through this vertex
+    // On the first pass we populate the derivative, which 1.0
+    if (_gradient.empty()) {
+      auto size_to_allocate = _output.size();
+      _gradient = std::vector<float>(size_to_allocate, 1.0);
+    }
+
+    for (uint32_t neuron_index = 0;
+         neuron_index < gradient.value().at(0).size(); neuron_index++) {
+      _gradient[neuron_index] += gradient.value().at(0).at(neuron_index);
+    }
   }
 
   std::string getName() final { return "Input"; }
 
-  std::vector<std::vector<float>> getGradient() const final {
-    return {_gradient};
-  }
-
   constexpr uint32_t getOutputDimension() const final {
     return _left_input->getOutputDimension();
   }
-
-  std::vector<std::vector<float>> getOutput() const final { return {_output}; }
 
 private:
   std::shared_ptr<Vertex> applyOperation() final {

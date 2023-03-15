@@ -28,9 +28,6 @@ struct Expression {
 
 class Vertex {
 public:
-  virtual std::shared_ptr<Vertex>
-  setIncomingEdges(std::vector<VertexPointer> &edges) = 0;
-
   virtual ~Vertex() = default;
 
   /**
@@ -57,7 +54,10 @@ public:
   /**
    * Returns the output of the forward pass through the vertex.
    */
-  virtual std::vector<std::vector<float>> getOutput() const = 0;
+  virtual std::vector<std::vector<float>> getOutput() const {
+    assert(!_output.empty());
+    return {_output};
+  }
 
   /**
    * Returns the name of the corresponding operation implemented by
@@ -69,7 +69,10 @@ public:
    * Returns the gradient of the loss function with respect to
    * the operation computed by the vertex.
    */
-  virtual std::vector<std::vector<float>> getGradient() const = 0;
+  virtual std::vector<std::vector<float>> getGradient() const {
+    assert(!_gradient.empty());
+    return {_gradient};
+  }
 
   /**
    * Returns the size of the output vector computed by the vertex.
@@ -79,6 +82,8 @@ public:
   virtual constexpr uint32_t getOutputDimension() const = 0;
 
 protected:
+  std::vector<float> _output;
+  std::vector<float> _gradient;
   virtual std::shared_ptr<Vertex> applyOperation() = 0;
 
 private:
