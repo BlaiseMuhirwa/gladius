@@ -34,7 +34,7 @@ public:
    * The forward function computes the function specified by
    * the type of the vertex in the computation graph.
    * This computation is responsible for propagating the
-   * input forward in the DAG. 
+   * input forward in the DAG.
    */
   virtual void forward() = 0;
 

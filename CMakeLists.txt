@@ -21,7 +21,7 @@ add_subdirectory(src/comp_graph)
 add_subdirectory(src/comp_graph/vertices)
 
 ## Add dependencies 
-set(SKIP_PER]FORMANCE_COMPARISON ON)
+set(SKIP_PERFORMANCE_COMPARISON ON)
 add_subdirectory(dependencies/cereal EXCLUDE_FROM_ALL)
 
 include_directories(dependencies)

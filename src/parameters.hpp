@@ -8,6 +8,8 @@
 
 namespace fortis::parameters {
 
+enum class ParameterType { WeightParameter, BiasParameter };
+
 struct Parameter {
   explicit Parameter(std::vector<std::vector<float>> &&input)
       : _axes(input.size() == 1 ? 1 : 2), _value(input) {}
@@ -19,6 +21,13 @@ struct Parameter {
 
   void setGradient(const std::vector<std::vector<float>> &gradient) {
     _gradient = std::move(gradient);
+  }
+
+  ParameterType getParameterType() {
+    if (_axes == 1) {
+      return ParameterType::BiasParameter;
+    }
+    return ParameterType::WeightParameter;
   }
 
 private:

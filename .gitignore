@@ -3,3 +3,4 @@ src/cereal
 dependencies
 src/utils.hpp 
 .cache
+data
