@@ -4,7 +4,6 @@
 #include <optional>
 #include <set>
 #include <src/comp_graph/vertex.hpp>
-#include <src/loss_functions/loss.hpp>
 #include <stdexcept>
 #include <vector>
 

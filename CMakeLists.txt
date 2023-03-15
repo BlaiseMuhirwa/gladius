@@ -17,17 +17,18 @@ include_directories(${CMAKE_BINARY_DIR})
 
 ## This requires having a CMakeLists.txt file in the subdirectory 
 add_subdirectory(src)
-add_subdirectory(src/operations)
+add_subdirectory(src/comp_graph)
+add_subdirectory(src/comp_graph/vertices)
 
 ## Add dependencies 
-set(SKIP_PERFORMANCE_COMPARISON ON)
+set(SKIP_PER]FORMANCE_COMPARISON ON)
 add_subdirectory(dependencies/cereal EXCLUDE_FROM_ALL)
 
 include_directories(dependencies)
 include_directories(src)
 include_directories(src/cereal)
-include_directories(src/operations)
 include_directories(src/comp_graph)
+include_directories(src/comp_graph/vertices)
 
 
 set(FORTIS_SOURCES

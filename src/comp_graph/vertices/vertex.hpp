@@ -34,11 +34,7 @@ public:
    * The forward function computes the function specified by
    * the type of the vertex in the computation graph.
    * This computation is responsible for propagating the
-   * input forward in the DAG. In addition, the forward method
-   * will also optionally allocate the size for the gradient vector
-   * since we want to use std::vector::operator[], which may be invoked
-   * multiple times during the backward pass. This will happen
-   * when a vertex has at least two child vertices.
+   * input forward in the DAG. 
    */
   virtual void forward() = 0;
 
