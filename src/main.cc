@@ -19,7 +19,7 @@ uint32_t swapEndian(uint32_t val) {
   return (val << 16) | (val >> 16);
 }
 
-void readMNIST(const char *image_filename, const char *label_filename) {
+void D(const char *image_filename, const char *label_filename) {
   std::ifstream image_file(image_filename, std::ios::in | std::ios::binary);
   std::ifstream label_file(label_filename, std::ios::in | std::ios::binary);
 
@@ -83,6 +83,6 @@ void readMNIST(const char *image_filename, const char *label_filename) {
 }
 
 int main(int argc, char **argv) {
-  readMNIST(TRAIN_DATA, TRAIN_LABELS);
+  D(TRAIN_DATA, TRAIN_LABELS);
   return 0;
 }

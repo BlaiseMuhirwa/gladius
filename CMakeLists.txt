@@ -10,7 +10,9 @@ set(CMAKE_C_COMPILER /usr/bin/clang)
 set(CMAKE_CXX_COMPILER /usr/bin/clang++)
 
 ## set compiler flags 
-set(CMAKE_CXX_FLAGS " -std=c++17 -O3 -lbenchmark")
+## TODO: Add -lbenchmark compiler flag and the corresponding
+## benchmark submodule https://github.com/google/benchmark
+set(CMAKE_CXX_FLAGS " -std=c++17 -O3")
 
 include_directories(".")
 include_directories(${CMAKE_BINARY_DIR})

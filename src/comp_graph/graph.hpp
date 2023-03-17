@@ -1,5 +1,5 @@
+#pragma once
 
-#include <_types/_uint32_t.h>
 #include <cstddef>
 #include <optional>
 #include <set>

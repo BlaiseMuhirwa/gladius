@@ -1,11 +1,13 @@
+#pragma once
 
-#include "lookup_parameters.hpp"
-#include "parameters.hpp"
-#include <_types/_uint32_t.h>
-#include <cereal/access.hpp>
-#include <cereal/types/variant.hpp>
-#include <cereal/types/vector.hpp>
 #include <memory>
+#include <src/cereal/access.hpp>
+#include <src/cereal/archives/binary.hpp>
+#include <src/cereal/types/variant.hpp>
+#include <src/cereal/types/vector.hpp>
+#include <src/lookup_parameters.hpp>
+#include <src/parameters.hpp>
+#include <string>
 #include <variant>
 
 #ifdef RUN_BENCHMARKS
@@ -19,10 +21,9 @@ using parameters::LookupParameterPointer;
 using parameters::Parameter;
 using parameters::ParameterPointer;
 
-class Model : public std::enable_shared_from_this<Model> {
+class Model {
 
 public:
-  Model(){};
 
   Parameter &addParameter(uint32_t dimension);
 
@@ -40,21 +41,43 @@ public:
     return _parameters;
   }
 
-  void save(const std::string &file_name) const;
-  static std::shared_ptr<Model> load(const std::string &file_name);
+  void updateParameterGradients();
 
-private:
-#ifdef RUN_BENCHMARKS
-  static void registerBenchmarkToRun() {
-    BENCHMARK(addParameter);
-    BENCHMARK(addLookupParameter);
-    BENCHMARK(save);
-    BENCHMARK(load);
+  void save(const std::string &file_name) const {
+    std::ofstream file_stream =
+        fortis::handle_ofstream(file_name, std::ios::binary);
+    cereal::BinaryOutputArchive output_archive(file_stream);
+
+    output_archive(*this);
+  }
+  static std::shared_ptr<Model> load(const std::string &file_name) {
+    std::ifstream file_stream =
+        fortis::handle_ifstream(file_name, std::ios::binary);
+
+    cereal::BinaryInputArchive input_archive(file_stream);
+    // Model model;
+    // input_archive(model);
+    // return std::make_shared<Model>(model);
+    std::shared_ptr<Model> deserialized_model(new Model());
+    input_archive(*deserialized_model);
+
+    return nullptr;
   }
 
-  void launchBenchmarks() { BENCHMARK_MAIN(); }
+private:
+// #ifdef RUN_BENCHMARKS
+//   static void registerBenchmarkToRun() {
+//     BENCHMARK(addParameter);
+//     BENCHMARK(addLookupParameter);
+//     BENCHMARK(save);
+//     BENCHMARK(load);
+//   }
 
-#endif
+//   void launchBenchmarks() { BENCHMARK_MAIN(); }
+
+// #endif
+  Model(){};
+
   std::vector<std::variant<Parameter, LookupParameter>> _parameters;
 
   friend class cereal::access;

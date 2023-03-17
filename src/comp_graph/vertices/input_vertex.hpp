@@ -1,7 +1,10 @@
+#pragma once
+
 #include <cereal/access.hpp>
+#include <cereal/types/base_class.hpp>
 #include <cereal/types/polymorphic.hpp>
 #include <memory>
-#include <src/comp_graph/vertex.hpp>
+#include <src/comp_graph/vertices/vertex.hpp>
 #include <vector>
 
 namespace fortis::comp_graph {

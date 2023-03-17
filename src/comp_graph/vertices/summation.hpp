@@ -1,8 +1,10 @@
-#include <_types/_uint32_t.h>
+#pragma once
+
 #include <cereal/access.hpp>
+#include <cereal/types/base_class.hpp>
 #include <cereal/types/polymorphic.hpp>
 #include <memory>
-#include <src/comp_graph/vertex.hpp>
+#include <src/comp_graph/vertices/vertex.hpp>
 #include <stdexcept>
 #include <vector>
 

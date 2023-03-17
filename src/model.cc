@@ -1,9 +1,10 @@
-#include "model.hpp"
+#include <src/model.hpp>
 #include "./utils.hpp"
 #include "cereal/archives/binary.hpp"
 #include "parameters.hpp"
 #include <algorithm>
 #include <iterator>
+#include <fstream> 
 #include <random>
 namespace fortis {
 
@@ -51,25 +52,5 @@ Parameter &Model::addParameter(const std::vector<uint32_t> &dimensions) {
   return *parameter;
 }
 
-void Model::save(const std::string &file_name) const {
-  std::ofstream file_stream =
-      fortis::handle_ofstream(file_name, std::ios::binary);
-  cereal::BinaryOutputArchive output_archive(file_stream);
-
-  output_archive(*this);
-}
-
-static std::shared_ptr<Model> load(const std::string &file_name) {
-  std::ifstream file_stream =
-      fortis::handle_ifstream(file_name, std::ios::binary);
-
-  cereal::BinaryInputArchive input_archive(file_stream);
-  std::shared_ptr<Model> deserialized_model(new Model());
-  input_archive(*deserialized_model);
-
-  return deserialized_model;
-}
-
-void Model::updateParameterGradients() { return; }
 
 } // namespace fortis

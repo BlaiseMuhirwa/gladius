@@ -1,3 +1,4 @@
+#pragma once
 
 #include "vertex.hpp"
 #include <cassert>
@@ -14,7 +15,6 @@ namespace fortis::comp_graph {
 using fortis::comp_graph::Expression;
 using fortis::comp_graph::Vertex;
 
-class SigmoidActivation;
 
 class ReLUActivation final
     : public Vertex,
@@ -201,4 +201,3 @@ private:
 
 CEREAL_REGISTER_TYPE(fortis::comp_graph::TanHActivation)
 CEREAL_REGISTER_TYPE(fortis::comp_graph::ReLUActivation)
-CEREAL_REGISTER_TYPE(fortis::comp_graph::SigmoidActivation)

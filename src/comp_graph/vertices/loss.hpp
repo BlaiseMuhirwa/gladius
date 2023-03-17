@@ -1,9 +1,12 @@
+#pragma once
 
 #include <_types/_uint32_t.h>
+#include <cereal/types/base_class.hpp>
+#include <cereal/types/polymorphic.hpp>
 #include <memory>
 #include <optional>
 #include <src/cereal/access.hpp>
-#include <src/comp_graph/vertex.hpp>
+#include <src/comp_graph/vertices/vertex.hpp>
 #include <stdexcept>
 #include <vector>
 
@@ -101,8 +104,11 @@ private:
   std::optional<float> _loss;
 
   template <typename Archive> void serialize(Archive &archive) {
-    archive(_logits, _label, _loss, _gradient);
+    archive(cereal::base_class<Vertex>(this), _logits, _label, _loss,
+            _gradient);
   }
 };
 
 } // namespace fortis::comp_graph
+
+CEREAL_REGISTER_TYPE(fortis::comp_graph::CrossEntropyLoss)
