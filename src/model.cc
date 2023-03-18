@@ -1,15 +1,15 @@
-#include <src/model.hpp>
 #include "./utils.hpp"
-#include "cereal/archives/binary.hpp"
 #include "parameters.hpp"
 #include <algorithm>
+#include <fstream>
 #include <iterator>
-#include <fstream> 
 #include <random>
+#include <src/cereal/archives/binary.hpp>
+#include <src/model.hpp>
 namespace fortis {
 
-static inline float const MEAN = 0.0f;
-static inline float const STD_DEV = 1.0f;
+static inline float const MEAN = 0.f;
+static inline float const STD_DEV = 1.f;
 
 Parameter &Model::addParameter(uint32_t dimension) {
   std::random_device random_device;
@@ -51,6 +51,5 @@ Parameter &Model::addParameter(const std::vector<uint32_t> &dimensions) {
   _parameters.emplace_back(*parameter);
   return *parameter;
 }
-
 
 } // namespace fortis

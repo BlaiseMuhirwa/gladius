@@ -51,7 +51,7 @@ public:
     }
   }
 
-  std::string getName() final { return "Input"; }
+  inline std::string getName() final { return "Input"; }
 
   constexpr uint32_t getOutputDimension() const final {
     return _left_input->getOutputDimension();

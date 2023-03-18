@@ -1,9 +1,9 @@
 #pragma once
 
-#include <src/cereal/access.hpp>
 #include "utils.hpp"
 #include <ios>
 #include <memory>
+#include <src/cereal/access.hpp>
 #include <vector>
 
 namespace fortis::parameters {
@@ -13,6 +13,8 @@ enum class ParameterType { WeightParameter, BiasParameter };
 struct Parameter {
   explicit Parameter(std::vector<std::vector<float>> &&input)
       : _axes(input.size() == 1 ? 1 : 2), _value(input) {}
+
+  static std::unique_ptr<Parameter> createLabelParameter();
 
   constexpr uint32_t axes() const { return _axes; }
   std::vector<std::vector<float>> getValue() const { return _value; }

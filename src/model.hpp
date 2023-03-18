@@ -24,6 +24,7 @@ using parameters::ParameterPointer;
 class Model {
 
 public:
+  Model() = default;
 
   Parameter &addParameter(uint32_t dimension);
 
@@ -50,33 +51,32 @@ public:
 
     output_archive(*this);
   }
-  static std::shared_ptr<Model> load(const std::string &file_name) {
-    std::ifstream file_stream =
-        fortis::handle_ifstream(file_name, std::ios::binary);
+  // static std::shared_ptr<Model> load(const std::string &file_name) {
+  //   std::ifstream file_stream =
+  //       fortis::handle_ifstream(file_name, std::ios::binary);
 
-    cereal::BinaryInputArchive input_archive(file_stream);
-    // Model model;
-    // input_archive(model);
-    // return std::make_shared<Model>(model);
-    std::shared_ptr<Model> deserialized_model(new Model());
-    input_archive(*deserialized_model);
+  //   cereal::BinaryInputArchive input_archive(file_stream);
+  //   // Model model;
+  //   // input_archive(model);
+  //   // return std::make_shared<Model>(model);
+  //   std::shared_ptr<Model> deserialized_model(new Model());
+  //   input_archive(*deserialized_model);
 
-    return nullptr;
-  }
+  //   return nullptr;
+  // }
 
 private:
-// #ifdef RUN_BENCHMARKS
-//   static void registerBenchmarkToRun() {
-//     BENCHMARK(addParameter);
-//     BENCHMARK(addLookupParameter);
-//     BENCHMARK(save);
-//     BENCHMARK(load);
-//   }
+  // #ifdef RUN_BENCHMARKS
+  //   static void registerBenchmarkToRun() {
+  //     BENCHMARK(addParameter);
+  //     BENCHMARK(addLookupParameter);
+  //     BENCHMARK(save);
+  //     BENCHMARK(load);
+  //   }
 
-//   void launchBenchmarks() { BENCHMARK_MAIN(); }
+  //   void launchBenchmarks() { BENCHMARK_MAIN(); }
 
-// #endif
-  Model(){};
+  // #endif
 
   std::vector<std::variant<Parameter, LookupParameter>> _parameters;
 

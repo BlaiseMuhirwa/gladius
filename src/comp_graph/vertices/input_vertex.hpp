@@ -27,9 +27,9 @@ public:
     return _output->size();
   }
 
-  std::string getName() final { return "Input"; }
+  inline std::string getName() final { return "Input"; }
 
-  std::vector<std::vector<float>> getOutput() const override {
+  inline std::vector<std::vector<float>> getOutput() const override {
     return {*_output};
   }
 

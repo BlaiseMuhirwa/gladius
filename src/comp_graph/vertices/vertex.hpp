@@ -57,13 +57,13 @@ public:
    * Returns the name of the corresponding operation implemented by
    * the vertex.
    */
-  virtual std::string getName() = 0;
+  virtual inline std::string getName() = 0;
 
   /**
    * Returns the gradient of the loss function with respect to
    * the operation computed by the vertex.
    */
-  virtual std::vector<std::vector<float>> getGradient() const {
+  virtual inline std::vector<std::vector<float>> getGradient() const {
     assert(!_gradient.empty());
     return {_gradient};
   }

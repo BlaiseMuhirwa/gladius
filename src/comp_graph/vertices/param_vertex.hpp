@@ -31,7 +31,7 @@ public:
     assert(gradient.has_value());
     _parameter->setGradient(gradient.value());
   }
-  std::vector<std::vector<float>> getOutput() const final {
+  inline std::vector<std::vector<float>> getOutput() const final {
     return _parameter->getValue();
   }
 
@@ -39,7 +39,7 @@ public:
     return _output_dimension;
   }
 
-  std::string getName() final { return "Param"; }
+  inline std::string getName() final { return "Param"; }
 
 private:
   std::shared_ptr<Vertex> applyOperation() { return shared_from_this(); }

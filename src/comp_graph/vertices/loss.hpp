@@ -75,9 +75,9 @@ class CrossEntropyLoss final
     }
   }
 
-  std::string getName() final { return "CrossEntropyLoss"; }
+  inline std::string getName() final { return "CrossEntropyLoss"; }
 
-  std::vector<std::vector<float>> getOutput() const override {
+  inline std::vector<std::vector<float>> getOutput() const override {
     assert(_loss.has_value());
     return {{_loss.value()}};
   }

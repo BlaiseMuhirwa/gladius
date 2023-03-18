@@ -15,7 +15,6 @@ namespace fortis::comp_graph {
 using fortis::comp_graph::Expression;
 using fortis::comp_graph::Vertex;
 
-
 class ReLUActivation final
     : public Vertex,
       public std::enable_shared_from_this<ReLUActivation> {
@@ -73,7 +72,7 @@ public:
     }
   }
 
-  std::string getName() final { return "ReLU"; }
+  inline std::string getName() final { return "ReLU"; }
 
   constexpr uint32_t getOutputDimension() const final {
     assert(!_output.empty());
@@ -167,7 +166,7 @@ public:
     }
   }
 
-  std::string getName() final { return "TanH"; }
+  inline std::string getName() final { return "TanH"; }
 
   constexpr uint32_t getOutputDimension() const final {
     assert(!_output.empty());
