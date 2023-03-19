@@ -14,8 +14,8 @@ using fortis::comp_graph::Vertex;
 class InputVertex final : public Vertex,
                           public std::enable_shared_from_this<InputVertex> {
 public:
-  explicit InputVertex(std::shared_ptr<std::vector<float>> input)
-      : _output(std::move(input)) {}
+  explicit InputVertex(std::vector<float> &input)
+      : _output(std::make_shared<std::vector<float>>(std::move(input))) {}
 
   void forward() final { return; }
   void backward(const std::optional<std::vector<std::vector<float>>> &gradient =

@@ -15,6 +15,10 @@ public:
   Graph(const Graph &) = delete;
   Graph(Graph &&) = delete;
 
+  inline void renewComputationGraph() {
+    _topologically_sorted_vertices.clear();
+  }
+
   void addVertex(VertexPointer vertex) {
     _topologically_sorted_vertices.emplace_back(std::move(vertex));
   }

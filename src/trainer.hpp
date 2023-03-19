@@ -9,10 +9,10 @@ namespace fortis::trainers {
 
 class GradientDescentTrainer {
 public:
-  GradientDescentTrainer(std::shared_ptr<Model> model, float learning_rate);
+  GradientDescentTrainer(std::unique_ptr<Model> &model, float learning_rate);
 
   void takeDescentStep();
-  std::shared_ptr<Model> getModel() const;
+  std::unique_ptr<Model> &getModel();
 
 private:
   void
@@ -21,7 +21,7 @@ private:
   void updateBiasVectorParameter(std::vector<float> &bias_vector,
                                  std::vector<float> &gradient);
 
-  std::shared_ptr<Model> _model;
+  std::unique_ptr<Model> _model;
   float _learning_rate;
 
   friend class cereal::access;

@@ -8,7 +8,7 @@ namespace fortis::trainers {
 
 using fortis::parameters::ParameterType;
 
-GradientDescentTrainer::GradientDescentTrainer(std::shared_ptr<Model> model,
+GradientDescentTrainer::GradientDescentTrainer(std::unique_ptr<Model> &model,
                                                float learning_rate)
     : _model(std::move(model)), _learning_rate(learning_rate) {}
 
@@ -67,8 +67,6 @@ void GradientDescentTrainer::updateBiasVectorParameter(
   }
 }
 
-std::shared_ptr<Model> GradientDescentTrainer::getModel() const {
-  return _model;
-}
+std::unique_ptr<Model> &GradientDescentTrainer::getModel() { return _model; }
 
 } // namespace fortis::trainers
