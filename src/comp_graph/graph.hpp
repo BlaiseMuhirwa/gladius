@@ -15,8 +15,10 @@ public:
   Graph(const Graph &) = delete;
   Graph(Graph &&) = delete;
 
-  inline void renewComputationGraph() {
-    _topologically_sorted_vertices.clear();
+  inline void clearComputationGraph() {
+    if (!_topologically_sorted_vertices.empty()) {
+      _topologically_sorted_vertices.clear();
+    }
   }
 
   void addVertex(VertexPointer vertex) {
@@ -25,7 +27,7 @@ public:
 
   // TODO: Clean up the vertex interface so that we don't end up with
   //       the following situation (where we are computing the loss value);
-  void launchForwardPass() {
+  float launchForwardPass() {
     auto graph_size = _topologically_sorted_vertices.size();
     assert(_topologically_sorted_vertices[graph_size - 1]->getName() ==
            "CrossEntropyLoss");
@@ -36,6 +38,7 @@ public:
     }
     auto loss_vertex = _topologically_sorted_vertices[graph_size - 1];
     _loss_value = loss_vertex->getOutput().at(0).at(0);
+    return _loss_value.value();
   }
 
   void launchBackwardPass() {

@@ -35,8 +35,8 @@ public:
   LookupParameter &
   addLookupParameter(const LookupParameterPointer &lookup_parameter);
 
-  ParameterPointer getParameterByName(const std::string &name);
-  LookupParameterPointer getLookupParameterByName(const std::string &name);
+  ParameterPointer getParameterByID(uint32_t param_id);
+  LookupParameterPointer getLookupParameterByID(uint32_t param_id);
 
   std::vector<std::variant<Parameter, LookupParameter>> getParameters() const {
     return _parameters;

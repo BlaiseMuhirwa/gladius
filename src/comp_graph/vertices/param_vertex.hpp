@@ -14,7 +14,7 @@ class ParameterVertex final
     : public Vertex,
       public std::enable_shared_from_this<ParameterVertex> {
 public:
-  explicit ParameterVertex(std::shared_ptr<Parameter> parameter)
+  explicit ParameterVertex(std::unique_ptr<Parameter> parameter)
       : _parameter(std::move(parameter)),
         _output_dimension(_parameter->getValue().size()) {}
 
@@ -43,7 +43,7 @@ public:
 
 private:
   std::shared_ptr<Vertex> applyOperation() { return shared_from_this(); }
-  std::shared_ptr<Parameter> _parameter;
+  std::unique_ptr<Parameter> _parameter;
   uint32_t _output_dimension;
 
   friend class cereal::access;

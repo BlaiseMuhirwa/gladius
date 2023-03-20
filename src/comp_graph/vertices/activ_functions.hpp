@@ -12,7 +12,6 @@
 #include <stdexcept>
 
 namespace fortis::comp_graph {
-using fortis::comp_graph::Expression;
 using fortis::comp_graph::Vertex;
 
 class ReLUActivation final
@@ -30,7 +29,7 @@ public:
    * after calling function call operator.
    */
   std::shared_ptr<ReLUActivation>
-  operator()(const std::vector<VertexPointer> incoming_edges) {
+  operator()(std::vector<VertexPointer> &&incoming_edges) {
     if (_incoming_edges.size() != 1) {
       throw std::runtime_error(
           "ReLU activation function expects a single vector as "

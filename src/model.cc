@@ -6,6 +6,8 @@
 #include <random>
 #include <src/cereal/archives/binary.hpp>
 #include <src/model.hpp>
+#include <stdexcept>
+#include <variant>
 namespace fortis {
 
 static inline float const MEAN = 0.f;
@@ -50,6 +52,39 @@ Parameter &Model::addParameter(const std::vector<uint32_t> &dimensions) {
 
   _parameters.emplace_back(*parameter);
   return *parameter;
+}
+
+// TODO: Refactor the code below to combine getParameterByID and
+// getLookupParameterByID
+std::unique_ptr<Parameter> Model::getParameterByID(uint32_t param_id) {
+  if (param_id >= _parameters.size()) {
+    throw std::invalid_argument(
+        "Invalid ID encountered while attempting to access a model parameter.");
+  }
+  try {
+    auto parameter = std::get<Parameter>(_parameters[param_id]);
+    return std::make_unique<Parameter>(parameter);
+  } catch (const std::bad_variant_access &exception) {
+    throw std::invalid_argument(
+        "param_id is not compatible with the requested parameter type." +
+        std::to_string(*exception.what()));
+  }
+}
+
+std::unique_ptr<LookupParameter>
+Model::getLookupParameterByID(uint32_t param_id) {
+  if (param_id >= _parameters.size()) {
+    throw std::invalid_argument(
+        "Invalid ID encountered while attempting to access a model parameter.");
+  }
+  try {
+    auto parameter = std::get<LookupParameter>(_parameters[param_id]);
+    return std::make_unique<LookupParameter>(parameter);
+  } catch (const std::bad_variant_access &exception) {
+    throw std::invalid_argument(
+        "param_id is not compatible with the requested parameter type." +
+        std::to_string(*exception.what()));
+  }
 }
 
 } // namespace fortis
