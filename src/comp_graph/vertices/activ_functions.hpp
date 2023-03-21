@@ -9,16 +9,91 @@
 #include <format>
 #include <math.h>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 
 namespace fortis::comp_graph {
 using fortis::comp_graph::Vertex;
 
+class SoftMaxActivation final
+    : public Vertex,
+      public std::enable_shared_from_this<SoftMaxActivation> {
+public:
+  SoftMaxActivation() = default;
+
+  std::shared_ptr<SoftMaxActivation>
+  operator()(std::vector<VertexPointer> &&incoming_edges) {
+    if (incoming_edges.size() != 1) {
+      throw std::runtime_error(
+          "ReLU activation function expects a single vector as "
+          "input. Received " +
+          std::to_string(incoming_edges.size()) + " vectors.");
+    }
+    _incoming_edges = std::move(incoming_edges);
+    return shared_from_this();
+  }
+  void forward() final { return; }
+  void backward(const std::optional<std::vector<std::vector<float>>> &gradient =
+                    std::nullopt) final {
+    assert(gradient.has_value());
+    assert(!_output.empty());
+    // We will assume that the softmax operation is only connected to
+    // one loss function so that backpropagation through this vertex
+    // only happens once. As the types of supported models increase,
+    // this requirement can be relaxed.
+    assert(_gradient.empty());
+
+    auto vector_size = getOutputSize();
+    _gradient = std::vector<float>(vector_size);
+
+    for (uint32_t neuron_index = 0; neuron_index < vector_size;
+         neuron_index++) {
+      // Recall that the derivative of the softmax w.r.t any logit x_i is given
+      // by derivative = softmax(x_i)(1 - softmax(x_i))
+      auto softmax = _output[neuron_index];
+      float derivative = softmax * (1 - softmax);
+      _gradient[neuron_index] =
+          gradient.value().at(0).at(neuron_index) * derivative;
+    }
+  }
+
+  constexpr uint32_t getOutputSize() const final {
+    assert(!_output.empty());
+    return _output.size();
+  }
+
+  std::string getName() final { return "SoftMax"; }
+
+private:
+  std::shared_ptr<Vertex> applyOperation() final {
+    auto incoming_edge = _incoming_edges.at(0);
+    auto input_vector = incoming_edge->getOutput().at(0);
+    auto size = input_vector.size();
+
+    float sum_exponents = 0.f;
+    std::for_each(input_vector.begin(), input_vector.end(),
+                  [&](float value) { sum_exponents += exp(value); });
+
+    for (auto &logit : input_vector) {
+      float softmax_normalized_logit = exp(logit) / sum_exponents;
+      _output.push_back(softmax_normalized_logit);
+    }
+    return shared_from_this();
+  }
+
+  std::vector<VertexPointer> _incoming_edges;
+
+  friend class cereal::access;
+  template <typename Archive> void serialize(Archive &archive) {
+    archive(_output, _gradient, _incoming_edges);
+  }
+};
+
 class ReLUActivation final
     : public Vertex,
       public std::enable_shared_from_this<ReLUActivation> {
 public:
-  ReLUActivation() {}
+  ReLUActivation() = default;
   ReLUActivation &operator=(const ReLUActivation &) = delete;
   ReLUActivation &operator=(ReLUActivation &&) = delete;
 
@@ -48,7 +123,7 @@ public:
 
   void backward(
       const std::optional<std::vector<std::vector<float>>> &gradient) final {
-    assert(!gradient.has_value());
+    assert(gradient.has_value());
     assert(!_output.empty());
 
     auto vector_size = _output.size();
@@ -73,7 +148,7 @@ public:
 
   inline std::string getName() final { return "ReLU"; }
 
-  constexpr uint32_t getOutputDimension() const final {
+  constexpr uint32_t getOutputSize() const final {
     assert(!_output.empty());
     return _output.size();
   }
@@ -110,7 +185,7 @@ class TanHActivation final
    *          TanH(x) = \frac{1 - \exp(-2x)}{1 + \exp(-2x)}
    **/
 public:
-  TanHActivation() {}
+  TanHActivation() = default;
 
   TanHActivation &operator=(const TanHActivation &) = delete;
   TanHActivation &operator=(TanHActivation &&) = delete;
@@ -146,10 +221,10 @@ public:
    */
   void backward(
       const std::optional<std::vector<std::vector<float>>> &gradient) final {
-    assert(!gradient.has_value());
+    assert(gradient.has_value());
     assert(!_output.empty());
 
-    auto vector_size = _output.size();
+    auto vector_size = getOutputSize();
 
     if (_gradient.empty()) {
       _gradient = std::vector<float>(vector_size);
@@ -167,7 +242,7 @@ public:
 
   inline std::string getName() final { return "TanH"; }
 
-  constexpr uint32_t getOutputDimension() const final {
+  constexpr uint32_t getOutputSize() const final {
     assert(!_output.empty());
     return _output.size();
   }

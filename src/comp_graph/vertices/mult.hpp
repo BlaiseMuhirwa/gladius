@@ -21,13 +21,12 @@ public:
       : _left_input(std::move(left_input)),
         _right_input(std::move(right_input)) {
 
-    if (_left_input->getOutputDimension() !=
-        _right_input->getOutputDimension()) {
+    if (_left_input->getOutputSize() != _right_input->getOutputSize()) {
       throw std::invalid_argument(
           "Dimension mismatch for the inputs to Multiplier vertex. Make sure "
           "that the two inputs have the same dimensions.");
     }
-    _output.reserve(_left_input->getOutputDimension());
+    _output.reserve(_left_input->getOutputSize());
   }
 
   void forward() final {
@@ -53,8 +52,8 @@ public:
 
   inline std::string getName() final { return "Input"; }
 
-  constexpr uint32_t getOutputDimension() const final {
-    return _left_input->getOutputDimension();
+  constexpr uint32_t getOutputSize() const final {
+    return _left_input->getOutputSize();
   }
 
 private:

@@ -23,9 +23,7 @@ public:
     return;
   }
 
-  constexpr uint32_t getOutputDimension() const final {
-    return _output->size();
-  }
+  constexpr uint32_t getOutputSize() const final { return _output->size(); }
 
   inline std::string getName() final { return "Input"; }
 

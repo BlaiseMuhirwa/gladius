@@ -73,7 +73,7 @@ public:
    * TODO: Add support for multiple output dimension with std::tuple
    * and variadic templates.
    */
-  virtual constexpr uint32_t getOutputDimension() const = 0;
+  virtual constexpr uint32_t getOutputSize() const = 0;
 
 protected:
   std::vector<float> _output;

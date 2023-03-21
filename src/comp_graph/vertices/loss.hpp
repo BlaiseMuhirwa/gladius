@@ -6,12 +6,14 @@
 #include <memory>
 #include <optional>
 #include <src/cereal/access.hpp>
+#include <src/comp_graph/vertices/activ_functions.hpp>
 #include <src/comp_graph/vertices/vertex.hpp>
 #include <stdexcept>
 #include <vector>
 
 namespace fortis::comp_graph {
 
+using fortis::comp_graph::SoftMaxActivation;
 using fortis::comp_graph::Vertex;
 using fortis::comp_graph::VertexPointer;
 
@@ -41,7 +43,7 @@ class CrossEntropyLoss final
    */
   CrossEntropyLoss(VertexPointer input_vertex, std::vector<uint32_t> &label)
       : _input(std::move(input_vertex)), _label(std::move(label)) {
-    if (_input->getOutputDimension() != _label.size()) {
+    if (_input->getOutputSize() != _label.size()) {
       throw std::invalid_argument(
           "The size of the logits vector must be equal to the size of the "
           "label vector. Logits have size " +
@@ -91,7 +93,7 @@ class CrossEntropyLoss final
     return {{_loss.value()}};
   }
 
-  constexpr uint32_t getOutputDimension() const final { return 1; }
+  constexpr uint32_t getOutputSize() const final { return 1; }
 
 private:
   std::shared_ptr<Vertex> applyOperation() final {

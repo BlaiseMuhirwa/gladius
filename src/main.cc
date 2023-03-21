@@ -139,6 +139,5 @@ int main(int argc, char **argv) {
     gradient_descent_trainer.takeDescentStep();
   }
 
-  
   return 0;
 }

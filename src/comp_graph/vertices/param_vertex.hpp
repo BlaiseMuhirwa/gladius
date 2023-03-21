@@ -35,9 +35,7 @@ public:
     return _parameter->getValue();
   }
 
-  constexpr uint32_t getOutputDimension() const final {
-    return _output_dimension;
-  }
+  constexpr uint32_t getOutputSize() const final { return _output_dimension; }
 
   inline std::string getName() final { return "Param"; }
 
