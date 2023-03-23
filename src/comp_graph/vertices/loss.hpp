@@ -14,16 +14,8 @@
 
 namespace fortis::comp_graph {
 
-using fortis::comp_graph::SoftMaxActivation;
 using fortis::comp_graph::Vertex;
 using fortis::comp_graph::VertexPointer;
-
-static float softmax(float current_logit, const std::vector<float> &input) {
-  float sum = 0.0f;
-  std::for_each(input.begin(), input.end(),
-                [&sum](float logit) { sum += exp(logit); });
-  return exp(current_logit) / sum;
-}
 
 /**
  * Here we use the cross-entropy loss always with the softmax activation
@@ -49,8 +41,8 @@ class CrossEntropyLoss final
       throw std::invalid_argument(
           "The size of the probability vector must be equal to the size of the "
           "label vector. The Probabilities vector has size " +
-          std::to_string(probabilities_vector_size) + " while the label vector has size " +
-          std::to_string(_label.size()));
+          std::to_string(probabilities_vector_size) +
+          " while the label vector has size " + std::to_string(_label.size()));
     }
   }
 
@@ -83,7 +75,7 @@ class CrossEntropyLoss final
         1, std::vector<float>(output_size, 0.0));
 
     uint32_t index_with_positive_label = findIndexWithPositiveLabel(_label);
-    
+
     // derivative of -log(P_j) where j is the index
     auto derivative_at_index =
         -(1.f / probabilities.at(index_with_positive_label));

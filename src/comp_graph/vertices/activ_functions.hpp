@@ -30,12 +30,34 @@ public:
           std::to_string(incoming_edges.size()) + " vectors.");
     }
     _incoming_edges = std::move(incoming_edges);
+    _logits = _incoming_edges.at(0)->getOutput().at(0);
     return shared_from_this();
   }
-  void forward() final { return; }
+  void forward() final {
+    assert(!_logits.empty());
+    assert(_output.empty());
+
+    applyOperation();
+  }
+  /**
+   * This implementation computes the partial derivatives of the loss function
+   * w.r.t any logit.
+   * Suppose the logits vector has size k. Then, the gradient (jacobian) of the
+   * softmax function w.r.t any logit is a (k x k) matrix where [Dsof(x)]_ij is
+   * given by
+   *        [Dsof(x)]_ij = sof(x)_i(1 - sof(x)_j) if i = j
+   *                     = - sof(x)_i sof(x)_j    if i neq j
+   *
+   * For the dimensions to match, this implies that the input gradient from the
+   * loss MUST have dimensions (1 x k), 1 since the loss is a scalar value. We
+   * then use the chain rule to compute the partials of the loss function w.r.t
+   * the logits
+   */
   void backward(const std::optional<std::vector<std::vector<float>>> &gradient =
                     std::nullopt) final {
     assert(gradient.has_value());
+    assert(gradient.value().size() == 1);
+    assert(gradient.value().at(0).size() == _output.size());
     assert(!_output.empty());
     // We will assume that the softmax operation is only connected to
     // one loss function so that backpropagation through this vertex
@@ -43,17 +65,29 @@ public:
     // this requirement can be relaxed.
     assert(_gradient.empty());
 
-    auto vector_size = getOutputSize();
-    _gradient = std::vector<float>(vector_size);
+    auto num_dimensions = _logits.size();
+    std::vector<std::vector<float>> jacobian_matrix(
+        num_dimensions, std::vector<float>(num_dimensions, 0.f));
 
-    for (uint32_t neuron_index = 0; neuron_index < vector_size;
-         neuron_index++) {
-      // Recall that the derivative of the softmax w.r.t any logit x_i is given
-      // by derivative = softmax(x_i)(1 - softmax(x_i))
-      auto softmax = _output[neuron_index];
-      float derivative = softmax * (1 - softmax);
-      _gradient[neuron_index] =
-          gradient.value().at(0).at(neuron_index) * derivative;
+    for (uint32_t row_index = 0; row_index < num_dimensions; row_index++) {
+      for (uint32_t col_index = 0; col_index < num_dimensions; col_index++) {
+        if (row_index == col_index) {
+          jacobian_matrix[row_index][col_index] =
+              -(_output[row_index] * _output[col_index]);
+        } else {
+          jacobian_matrix[row_index][col_index] =
+              _output[row_index] * (1 - _output[row_index]);
+        }
+      }
+    }
+
+    _gradient = std::vector<std::vector<float>>(
+        1, std::vector<float>(num_dimensions, 0.f));
+
+    for (uint32_t col_index = 0; col_index < num_dimensions; col_index++) {
+      _gradient[0][col_index] = dotProduct(
+          /* vector = */ gradient.value().at(0), /* matrix = */ jacobian_matrix,
+          /* col_index = */ col_index);
     }
   }
 
@@ -65,16 +99,31 @@ public:
   std::string getName() final { return "SoftMax"; }
 
 private:
+  /**
+   * computes the dot product between the given vector and the j^th column
+   * vector in the given matrix, where j is the col_index.
+   */
+  static float dotProduct(const std::vector<float> &vector,
+                          const std::vector<std::vector<float>> &matrix,
+                          uint32_t col_index) {
+    assert(vector.size() == matrix.size());
+    float dot_product = 0.f;
+    for (uint32_t i = 0; i < vector.size(); i++) {
+      dot_product += vector[i] * matrix[i][col_index];
+    }
+    return dot_product;
+  }
+  /**
+   * Computes the softmax operation for the input logits
+   */
   std::shared_ptr<Vertex> applyOperation() final {
-    auto incoming_edge = _incoming_edges.at(0);
-    auto input_vector = incoming_edge->getOutput().at(0);
-    auto size = input_vector.size();
+    auto size = _logits.size();
 
     float sum_exponents = 0.f;
-    std::for_each(input_vector.begin(), input_vector.end(),
+    std::for_each(_logits.begin(), _logits.end(),
                   [&](float value) { sum_exponents += exp(value); });
 
-    for (auto &logit : input_vector) {
+    for (auto &logit : _logits) {
       float softmax_normalized_logit = exp(logit) / sum_exponents;
       _output.push_back(softmax_normalized_logit);
     }
@@ -82,6 +131,7 @@ private:
   }
 
   std::vector<VertexPointer> _incoming_edges;
+  std::vector<float> _logits;
 
   friend class cereal::access;
   template <typename Archive> void serialize(Archive &archive) {
