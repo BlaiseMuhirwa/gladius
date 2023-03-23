@@ -44,22 +44,18 @@ class CrossEntropyLoss final
    */
   CrossEntropyLoss(VertexPointer input_vertex, std::vector<float> &label)
       : _input(std::move(input_vertex)), _label(std::move(label)) {
-    if (_input->getOutputSize() != _label.size()) {
+    auto probabilities_vector_size = _input->getOutputSize();
+    if (probabilities_vector_size != _label.size()) {
       throw std::invalid_argument(
-          "The size of the logits vector must be equal to the size of the "
-          "label vector. Logits have size " +
-          std::to_string(_logits.size()) + " while the label vector has size " +
+          "The size of the probability vector must be equal to the size of the "
+          "label vector. The Probabilities vector has size " +
+          std::to_string(probabilities_vector_size) + " while the label vector has size " +
           std::to_string(_label.size()));
     }
-    // This has to be a copy because std::move would cause a
-    // runtime error for subsequent calls that require _input->getOutput()
-    // to be non-empty
-    _logits = _input->getOutput().at(0);
   }
 
   void forward() final {
     assert(!_label.empty());
-    assert(!_logits.empty());
     assert(!_loss.has_value());
 
     applyOperation();
@@ -68,8 +64,11 @@ class CrossEntropyLoss final
   /**
    * Suppose P \in \mathbb{R}^k is the output probability vector computed
    * by the softmax function, and let CE(Y, P) be the cross entropy loss
-   * computed by this vertex. Treating CE as a function of P (with Y) constant,
-   * we observe that the gradient is a 1 x n matrix 
+   * computed by this vertex. Treating CE as a function of P (with Y constant),
+   * i.e., CE(Y, P) = CE(P) = -log(P_j) where Y_j = 1.0,
+   * we observe that the gradient is a 1 x n matrix given by
+   * DCE = [0, 0, ..., (-1/P_j), ..., 0]
+   *
    */
   void backward(const std::optional<std::vector<std::vector<float>>> &gradient =
                     std::nullopt) final {
@@ -78,29 +77,17 @@ class CrossEntropyLoss final
                                   "not have a gradient parameter.");
     }
     assert(_gradient.empty());
-  }
+    auto output_size = _input->getOutputSize();
+    auto probabilities = _input->getOutput().at(0);
+    _gradient = std::vector<std::vector<float>>(
+        1, std::vector<float>(output_size, 0.0));
 
-  /**
-   * Here we recall that the derivative of the cross-entropy loss function
-   * with respect to any logit \hat{y_i} is given by
-   * softmax(\hat{y_i}) - y_i
-   * where y_i is the corresponding value in the label vector.
-   */
-  void backward(const std::optional<std::vector<std::vector<float>>> &gradient =
-                    std::nullopt) final {
-    if (gradient.has_value()) {
-      throw std::invalid_argument("The loss function's backward method should "
-                                  "not have a gradient parameter.");
-    }
-    assert(_gradient.empty());
-    _gradient = std::vector<float>(_logits.size());
-
-    for (uint32_t logit_index = 0; logit_index < _logits.size();
-         logit_index++) {
-      auto derivative =
-          softmax(_logits[logit_index], _logits) - _label[logit_index];
-      _gradient[logit_index] = derivative;
-    }
+    uint32_t index_with_positive_label = findIndexWithPositiveLabel(_label);
+    
+    // derivative of -log(P_j) where j is the index
+    auto derivative_at_index =
+        -(1.f / probabilities.at(index_with_positive_label));
+    _gradient[0][index_with_positive_label] = derivative_at_index;
   }
 
   inline std::string getName() final { return "CrossEntropyLoss"; }
@@ -145,7 +132,6 @@ private:
   }
 
   VertexPointer _input;
-  std::vector<float> _logits;
 
   // One-hot encoded vector representing the label
   std::vector<float> _label;
