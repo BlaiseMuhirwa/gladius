@@ -65,7 +65,7 @@ public:
    */
   virtual inline std::vector<std::vector<float>> getGradient() const {
     assert(!_gradient.empty());
-    return {_gradient};
+    return _gradient;
   }
 
   /**
@@ -77,7 +77,11 @@ public:
 
 protected:
   std::vector<float> _output;
-  std::vector<float> _gradient;
+  // We will use `gradient` to refer to both the jacobian and gradient
+  // pursuant to the ML literature. Mathematically, they are not really the
+  // same, but for now we will just abuse the term gradient.
+  std::vector<std::vector<float>> _gradient;
+
   virtual std::shared_ptr<Vertex> applyOperation() = 0;
 
 private:
