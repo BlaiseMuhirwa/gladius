@@ -32,6 +32,14 @@ public:
     assert(_output.empty());
     applyOperation();
   }
+  /**
+   * Let \phi(x, y) = x + y be the operation represented by this vertex
+   * for two input vectors x and y. Then, we observe that the Jacobian
+   * of \phi w.r.t either x or y is the identity matrix. Thus, the local
+   * gradient is the identity so that the upstream gradient parameter
+   * is passed backward to either input vertex for downstream gradients
+   * computations.
+   */
   void backward(const std::optional<std::vector<std::vector<float>>> &gradient =
                     std::nullopt) final {
     assert(gradient.has_value());

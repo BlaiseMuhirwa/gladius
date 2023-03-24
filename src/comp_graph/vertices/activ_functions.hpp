@@ -46,7 +46,7 @@ public:
    * softmax function w.r.t any logit is a (k x k) matrix where [Dsof(x)]_ij is
    * given by
    *        [Dsof(x)]_ij = sof(x)_i(1 - sof(x)_j) if i = j
-   *                     = - sof(x)_i sof(x)_j    if i neq j
+   *                     = - sof(x)_i sof(x)_j    if i \neq j
    *
    * For the dimensions to match, this implies that the input gradient from the
    * loss MUST have dimensions (1 x k), 1 since the loss is a scalar value. We
