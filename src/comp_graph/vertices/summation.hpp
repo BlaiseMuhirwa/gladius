@@ -45,19 +45,26 @@ public:
     assert(gradient.has_value());
 
     // Checks if this is the first time backpropagating through this vertex
-    // On the first pass we populate the derivative, which 1.0
+    // On the first pass we populate the derivative, which I_n x gradient
+    // i.e., the upstream gradient is copied over
     if (_gradient.empty()) {
-      auto size_to_allocate = _output.size();
-      _gradient = std::vector<float>(size_to_allocate, 1.0);
-    }
+      // _gradient = std::vector<float>(size_to_allocate, 1.0);
+      _gradient = gradient.value();
+    } else {
+      assert(_gradient.size() == gradient.value().size());
+      assert(_gradient.at(0).size() == gradient.value().at(0).size());
 
-    for (uint32_t neuron_index = 0;
-         neuron_index < gradient.value().at(0).size(); neuron_index++) {
-      _gradient[neuron_index] += gradient.value().at(0).at(neuron_index);
+      for (uint32_t row_index = 0; row_index < _gradient.size(); row_index++) {
+        for (uint32_t col_index = 0; col_index < _gradient.at(0).size();
+             col_index++) {
+          _gradient[row_index][col_index] +=
+              gradient.value()[row_index][col_index];
+        }
+      }
     }
   }
 
-  inline std::string getName() final { return "Input"; }
+  inline std::string getName() final { return "Summation"; }
 
   constexpr uint32_t getOutputSize() const final {
     return _left_input->getOutputSize();
@@ -78,7 +85,6 @@ private:
   VertexPointer _left_input;
   VertexPointer _right_input;
   std::vector<float> _output;
-  std::vector<float> _gradient;
 
   Summation() {}
   friend class cereal::access;
