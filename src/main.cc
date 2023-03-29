@@ -1,5 +1,6 @@
 
 #include <_types/_uint32_t.h>
+#include <algorithm>
 #include <cassert>
 #include <iostream>
 #include <memory>
@@ -63,15 +64,28 @@ defineModelParameters() {
           {ParameterType::BiasParameter, {10}}};
 }
 
-float computeAccuracy(std::vector<std::vector<float>> &probabilities,
-                      std::vector<std::vector<uint32_t>> &labels);
+float computeAccuracy(std::vector<float> &predicted_labels,
+                      std::vector<std::vector<float>> &true_labels) {
+  uint32_t correct_predictions = 0;
+  for (uint32_t label_index = 0; label_index < true_labels.size();
+       label_index++) {
+    // We can use std::max_element since the input is guaranteed to be one-hot
+    // encoded
+    auto max_iterator = std::max_element(true_labels[label_index].begin(),
+                                         true_labels[label_index].end());
+    if (*max_iterator == predicted_labels[label_index]) {
+      correct_predictions += 1;
+    }
+  }
+  return (float)correct_predictions / predicted_labels.size();
+}
 
 int main(int argc, char **argv) {
-  auto [images, labels] = fortis::readMnistDataset(
+  auto [images, labels] = fortis::utils::readMnistDataset(
       /* image_filename = */ TRAIN_DATA, /* label_filename = */ TRAIN_LABELS);
 
-  std::vector<std::vector<uint32_t>> one_hot_encoded_labels =
-      fortis::oneHotEncode(
+  std::vector<std::vector<float>> one_hot_encoded_labels =
+      fortis::utils::oneHotEncode(
           /* labels = */ labels, /* label_vector_dimension = */ 10);
 
   std::unique_ptr<fortis::Model> model = std::make_unique<fortis::Model>();
@@ -84,9 +98,11 @@ int main(int argc, char **argv) {
       /* model = */ model, /* learning_rate = */ LEARNING_RATE);
   auto computation_graph = std::make_unique<fortis::comp_graph::Graph>();
 
+  std::vector<float> losses, predicted_labels;
+
   for (uint32_t training_sample_index = 0;
        training_sample_index < images.size(); training_sample_index++) {
-    auto normalized_input = fortis::normalizeInput<uint32_t>(
+    auto normalized_input = fortis::utils::normalizeInput<uint32_t>(
         /* input_vector = */ images[training_sample_index],
         /* normalizer = */ 255.f);
     auto label = one_hot_encoded_labels[training_sample_index];
@@ -125,21 +141,29 @@ int main(int argc, char **argv) {
       computation_graph->addVertex(summation_op);
 
       if (layer_index < 2) {
-        ReLUActivation relu_op;
-        auto relu_activations = relu_op(/* incoming_edges = */ {summation_op});
-        computation_graph->addVertex(relu_activations);
+        auto edges = {summation_op};
+        auto relu_activation =
+            std::make_shared<ReLUActivation>(/* incoming_edges = */ edges);
+        computation_graph->addVertex(relu_activation);
 
-        current_activations = relu_activations;
+        current_activations = relu_activation;
       } else {
         auto loss_function = std::make_shared<CrossEntropyLoss>(
             /* input_vertex = */ summation_op, /* label = */ label);
+        computation_graph->addVertex(loss_function);
       }
     }
 
-    auto loss = computation_graph->launchForwardPass();
+    auto [predicted_label, loss] = computation_graph->launchForwardPass();
+    losses.push_back(loss);
+    predicted_labels.push_back(predicted_label);
     computation_graph->launchBackwardPass();
     gradient_descent_trainer.takeDescentStep();
   }
+
+  auto accuracy = computeAccuracy(predicted_labels, one_hot_encoded_labels);
+
+  std::cout << "[ACCURACY]:  " << accuracy << std::endl;
 
   return 0;
 }

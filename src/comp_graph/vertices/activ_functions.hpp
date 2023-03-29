@@ -1,7 +1,7 @@
 #pragma once
 
-#include "vertex.hpp"
 #include <_types/_uint32_t.h>
+#include <algorithm>
 #include <cassert>
 #include <cereal/access.hpp>
 #include <cereal/types/base_class.hpp>
@@ -11,6 +11,7 @@
 #include <math.h>
 #include <memory>
 #include <optional>
+#include <src/comp_graph/vertices/vertex.hpp>
 #include <src/utils.hpp>
 #include <stdexcept>
 #include <utility>
@@ -42,6 +43,17 @@ public:
 
     applyOperation();
   }
+
+  /**
+   * The predicted label corresponds to the argmax over all elements in the
+   * output. We return the index of the maximizer
+   */
+  float getPredictedLabel() const {
+    // Get iterator pointing to the maximum element
+    auto max_iterator = std::max_element(_output.begin(), _output.end());
+    return (float)std::distance(_output.begin(), max_iterator);
+  }
+
   /**
    * This implementation computes the partial derivatives of the loss function
    * w.r.t any logit.
@@ -127,6 +139,8 @@ private:
 
   std::vector<VertexPointer> _incoming_edges;
   std::vector<float> _logits;
+
+  SoftMaxActivation() = default;
 
   friend class cereal::access;
   template <typename Archive> void serialize(Archive &archive) {
@@ -220,7 +234,7 @@ private:
   std::vector<VertexPointer> _incoming_edges;
   std::optional<std::vector<std::vector<float>>> _jacobian;
 
-  ReLUActivation() {}
+  ReLUActivation() = default;
 
   friend class cereal::access;
   template <typename Archive> void serialize(Archive &archive) {
@@ -323,6 +337,9 @@ private:
   std::vector<VertexPointer> _incoming_edges;
   std::optional<std::vector<std::vector<float>>> _jacobian;
 
+
+  TanHActivation() = default;
+  
   friend class cereal::access;
   template <typename Archive> void serialize(Archive &archive) {
     archive(cereal::base_class<Vertex>(this), _incoming_edges, _jacobian,

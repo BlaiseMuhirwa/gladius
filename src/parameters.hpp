@@ -20,10 +20,12 @@ struct Parameter {
     _value = input;
   }
 
-  // Delete the copy constructor and copy assignment operator
-  Parameter(const Parameter &) = delete;
-  Parameter &operator=(const Parameter &) = delete;
-  Parameter &operator=(Parameter &&) = delete;
+  /**
+   * TODO: Delete the copy constructor and copy assignment operator
+   *   Parameter(const Parameter &) = delete;
+   *   Parameter &operator=(const Parameter &) = delete;
+   *   Parameter &operator=(Parameter &&) = delete;
+   */
 
   std::vector<std::vector<float>> getValue() const { return _value; }
 

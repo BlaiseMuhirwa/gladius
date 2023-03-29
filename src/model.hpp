@@ -66,7 +66,6 @@ public:
   // }
 
 private:
-
   std::vector<std::variant<Parameter, LookupParameter>> _parameters;
 
   friend class cereal::access;

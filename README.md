@@ -5,8 +5,8 @@ This project started out of my desire to have a very deep understanding of
 dynamic computation graphs in [PyTorch](https://pytorch.org/), a framework that 
 I use and love. Inspired by [the original paper of DyNet](https://arxiv.org/pdf/1701.03980.pdf), this repository implements a light-weight general-purpose deep learning 
 library from scratch. The ultimate goal is to have a well-maintained C++ library 
-with Rust (and potentially Python) wrappers and a GUI for visualizing
-embeddings in 3-D geometry.
+with Rust (and potentially Python) wrappers and a graphical interface for visualizing
+embeddings in 3-D geometry. 
 
 ### Architectural Design
 Fortis's architecture consists of the following components: 
@@ -30,7 +30,7 @@ Fortis's architecture consists of the following components:
         have a hard time having a recurrent neural network builder, for instance. 
         These work on top of expressions and operations and provide easy-to-use libraries. 
         More discussion on builders below. 
-- `ComputationGraph`: Expressions are part of an implicit computation graph object. 
+- `ComputationGraph`: Expressions are part of an implicit computation graph object, internally represented as a Directed Acyclic Graph. 
         Fortis currently assumes that only one computation graph will exist at a time. 
         From the user's perspective, we create a computation graph for each new training 
         example.
@@ -73,4 +73,8 @@ z_1 & z_2 & \ldots & z_n & \ldots & 0 & 0 & \ldots & 0 \\
 $$
 
 Notice that only $\frac{1}{m}$ entries all non-zero. So, for large values of $m$, $D_{W}\Phi$ is very sparse and we are far better off not computing the matrix above. 
+
+
+### Why the name Fortis, you ask?
+Well, I have always loved Latin. You can look up what this translates to in English. 
 

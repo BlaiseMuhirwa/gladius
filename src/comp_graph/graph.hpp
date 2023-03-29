@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <optional>
 #include <set>
+#include <src/comp_graph/vertices/activ_functions.hpp>
 #include <src/comp_graph/vertices/vertex.hpp>
 #include <stdexcept>
 #include <vector>
@@ -14,6 +15,8 @@ public:
   Graph() : _topologically_sorted_vertices({}), _loss_value(std::nullopt) {}
   Graph(const Graph &) = delete;
   Graph(Graph &&) = delete;
+  Graph& operator=(const Graph&) = delete;
+  Graph& operator=(Graph&&) = delete;
 
   inline void clearComputationGraph() {
     if (!_topologically_sorted_vertices.empty()) {
@@ -28,20 +31,29 @@ public:
     _topologically_sorted_vertices.emplace_back(std::move(vertex));
   }
 
-  // TODO: Clean up the vertex interface so that we don't end up with
-  //       the following situation (where we are computing the loss value);
-  float launchForwardPass() {
+  /**
+   * Returns a tuple of the predicted label and the loss value
+   * TODO: Clean up the vertex interface so that we don't end up with
+   *       the following situation (where we are computing the loss value).
+   */
+  std::tuple<float, float> launchForwardPass() {
     auto graph_size = _topologically_sorted_vertices.size();
     assert(_topologically_sorted_vertices[graph_size - 1]->getName() ==
            "CrossEntropyLoss");
 
+    float prediction;
     for (uint32_t vertex_index = 0; vertex_index < graph_size; vertex_index++) {
       auto vertex = _topologically_sorted_vertices[vertex_index];
       vertex->forward();
+      if (vertex->getName() == "SoftMax") {
+        prediction =
+            dynamic_cast<fortis::comp_graph::SoftMaxActivation *>(vertex.get())
+                ->getPredictedLabel();
+      }
     }
     auto loss_vertex = _topologically_sorted_vertices[graph_size - 1];
     _loss_value = loss_vertex->getOutput().at(0).at(0);
-    return _loss_value.value();
+    return {prediction, _loss_value.value()};
   }
 
   void launchBackwardPass() {
