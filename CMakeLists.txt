@@ -15,6 +15,7 @@ set(CMAKE_CXX_COMPILER /usr/bin/clang++)
 set(CMAKE_CXX_FLAGS " -std=c++17 -O3")
 
 include_directories(".")
+include_directories(dependencies)
 include_directories(${CMAKE_BINARY_DIR})
 
 ## This requires having a CMakeLists.txt file in the subdirectory 
@@ -25,6 +26,7 @@ add_subdirectory(src/comp_graph/vertices)
 ## Add dependencies 
 set(SKIP_PERFORMANCE_COMPARISON ON)
 add_subdirectory(dependencies/cereal EXCLUDE_FROM_ALL)
+add_subdirectory(dependencies/googletest EXCLUDE_FROM_ALL)
 
 include_directories(dependencies)
 include_directories(src)
@@ -51,7 +53,6 @@ target_include_directories(
 set_target_properties(fortis PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(fortis PUBLIC)
 
-add_executable(main ${PROJECT_SOURCE_DIR}/src/main.cc)
 
 message("===================================================")
 message("\tProject Directory = ${PROJECT_SOURCE_DIR}")

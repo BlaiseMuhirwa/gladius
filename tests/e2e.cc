@@ -4,7 +4,7 @@
 #include <cassert>
 #include <iostream>
 #include <memory>
-#include <parameters.hpp>
+#include <src/parameters.hpp>
 #include <src/comp_graph/graph.hpp>
 #include <src/comp_graph/vertices/activ_functions.hpp>
 #include <src/comp_graph/vertices/input_vertex.hpp>
@@ -18,6 +18,8 @@
 #include <src/trainer.hpp>
 #include <src/utils.hpp>
 #include <tuple>
+#include <gtest/gtest.h>
+
 
 using fortis::comp_graph::CrossEntropyLoss;
 using fortis::comp_graph::InputVertex;
@@ -33,6 +35,8 @@ static inline const char *TRAIN_DATA = "data/train-images-idx3-ubyte";
 static inline const char *TRAIN_LABELS = "data/train-labels-idx1-ubyte";
 static inline const uint32_t NUM_LAYERS = 3;
 static inline const float LEARNING_RATE = 0.0001f;
+static inline const float ACCURACY_THRESHOLD = 0.9;
+
 
 void initializeParameters(
     std::unique_ptr<fortis::Model> &model,
@@ -77,11 +81,12 @@ float computeAccuracy(std::vector<float> &predicted_labels,
       correct_predictions += 1;
     }
   }
-  return (float)correct_predictions / predicted_labels.size();
+  return (correct_predictions * 1.0) / predicted_labels.size();
 }
 
-int main(int argc, char **argv) {
-  auto [images, labels] = fortis::utils::readMnistDataset(
+
+TEST(FortisMLPMnist, TestAccuracyScore) {
+auto [images, labels] = fortis::utils::readMnistDataset(
       /* image_filename = */ TRAIN_DATA, /* label_filename = */ TRAIN_LABELS);
 
   std::vector<std::vector<float>> one_hot_encoded_labels =
@@ -163,7 +168,5 @@ int main(int argc, char **argv) {
 
   auto accuracy = computeAccuracy(predicted_labels, one_hot_encoded_labels);
 
-  std::cout << "[ACCURACY]:  " << accuracy << std::endl;
-
-  return 0;
+  ASSERT_GE(accuracy, ACCURACY_THRESHOLD);
 }
