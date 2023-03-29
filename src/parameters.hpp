@@ -4,6 +4,7 @@
 #include <ios>
 #include <memory>
 #include <src/cereal/access.hpp>
+#include <stdexcept>
 #include <vector>
 
 namespace fortis::parameters {
@@ -11,22 +12,39 @@ namespace fortis::parameters {
 enum class ParameterType { WeightParameter, BiasParameter };
 
 struct Parameter {
-  explicit Parameter(std::vector<std::vector<float>> &&input)
-      : _axes(input.size() == 1 ? 1 : 2), _value(input) {}
+  explicit Parameter(std::vector<std::vector<float>> &&input) {
+    if (input.empty()) {
+      throw std::invalid_argument(
+          "Fortis parameter initialization requires a non-empty vector(s).");
+    }
+    _value = input;
+  }
 
-  static std::unique_ptr<Parameter> createLabelParameter();
+  // Delete the copy constructor and copy assignment operator
+  Parameter(const Parameter &) = delete;
+  Parameter &operator=(const Parameter &) = delete;
+  Parameter &operator=(Parameter &&) = delete;
 
-  constexpr uint32_t axes() const { return _axes; }
   std::vector<std::vector<float>> getValue() const { return _value; }
 
   std::vector<std::vector<float>> getGradient() const { return _gradient; }
 
-  void setGradient(const std::vector<std::vector<float>> &gradient) {
+  void setGradient(std::vector<std::vector<float>> &gradient) {
     _gradient = std::move(gradient);
   }
 
+  /**
+   * Returns the total number of trainable parameters. For instance,
+   * If the parameter wraps a matrix of mxn dimensions, the total
+   * number of parameters is mxn
+   */
+  inline uint32_t getParameterCount() const {
+    return _value.size() * _value.at(0).size();
+  }
+
   ParameterType getParameterType() {
-    if (_axes == 1) {
+    auto dimension = _value.size();
+    if (dimension == 1) {
       return ParameterType::BiasParameter;
     }
     return ParameterType::WeightParameter;
@@ -34,14 +52,13 @@ struct Parameter {
 
 private:
   Parameter(){};
-  uint32_t _axes;
   std::vector<std::vector<float>> _value;
   std::vector<std::vector<float>> _gradient;
 
   friend class cereal::access;
 
   template <typename Archive> void serialize(Archive &archive) {
-    archive(_axes, _value, _gradient);
+    archive(_value, _gradient);
   }
 };
 

@@ -13,6 +13,11 @@ struct LookupParameter {
   // the pipeline only supports two dimensions.
   explicit LookupParameter(std::vector<uint32_t> &dimensions)
       : _dimensions(dimensions){};
+  
+  // Delete the copy constructor and copy assignment operator
+  LookupParameter(const LookupParameter &) = delete;
+  LookupParameter &operator=(const LookupParameter &) = delete;
+  LookupParameter &operator=(LookupParameter &&) = delete;
 
   std::vector<uint32_t> _dimensions;
 

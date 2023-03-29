@@ -19,6 +19,9 @@ public:
     if (!_topologically_sorted_vertices.empty()) {
       _topologically_sorted_vertices.clear();
     }
+    if (_loss_value) {
+      _loss_value = std::nullopt;
+    }
   }
 
   void addVertex(VertexPointer vertex) {
@@ -47,13 +50,11 @@ public:
           "You must compute the value of the loss function first.");
     }
     auto graph_size = _topologically_sorted_vertices.size();
-    std::optional<std::vector<std::vector<float>>> previous_gradient =
-        std::nullopt;
+
     for (uint32_t vertex_index = graph_size - 1; vertex_index >= 0;
          vertex_index--) {
       auto vertex = _topologically_sorted_vertices[vertex_index];
-      vertex->backward(previous_gradient);
-      previous_gradient = vertex->getGradient();
+      vertex->backward();
     }
   }
 

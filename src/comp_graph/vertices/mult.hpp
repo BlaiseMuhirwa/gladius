@@ -30,7 +30,7 @@ public:
     auto left_input_shape = _left_input->getOutputShape();
     auto right_input_shape = _right_input->getOutputShape();
 
-    if (left_input_shape.second == right_input_shape.second) {
+    if (!(left_input_shape.second == right_input_shape.second)) {
       throw std::invalid_argument(
           "Dimension mismatch for the inputs to Multiplier vertex. Make sure "
           "that the two inputs have the same dimensions.");
@@ -65,12 +65,12 @@ public:
     backwardRightInputImpl();
   }
 
-  inline std::string getName() final { return "Multiplier"; }
+  inline std::string getName() final { return "Multiplication"; }
 
   std::pair<uint32_t, uint32_t> getOutputShape() const final {
     assert(!_output.empty());
     auto output_size = _output.size();
-    return std::make_pair(output_size, 0);
+    return std::make_pair(1, output_size);
   }
 
 private:
@@ -83,13 +83,21 @@ private:
    */
   void backwardRightInputImpl() {
 
-    // auto [row_size, col_size] = _left_input->getOutputShape();
-    // // Checks if this is the first time backpropagating through this vertex
-    // // On the first pass we populate the partial derivatives
-    // if (_local_left_gradient.empty()) {
-    //   _local_left_gradient = std::vector<std::vector<float>>(
-    //       1, std::vector<float>(row_size * col_size, 0.f));
-    // }
+    auto [row_size, col_size] = _right_input->getOutputShape();
+    // Checks if this is the first time backpropagating through this vertex
+    // On the first pass we populate the partial derivatives
+    if (_local_right_gradient.empty()) {
+      _local_right_gradient =
+          std::vector<std::vector<float>>(1, std::vector<float>(col_size, 0.f));
+    }
+    auto num_columns = _left_input->getOutputShape().second;
+    for (uint32_t col_index = 0; col_index < num_columns; col_index++) {
+      _local_right_gradient[0][col_index] += fortis::utils::dotProduct(
+          /* vector = */ _upstream_gradient.value().at(0),
+          /* matrix = */ _left_input->getOutput(), /* col_index = */ col_index);
+    }
+
+    _right_input->setUpstreamGradient(/* gradient = */ _local_right_gradient);
   }
   /**
    * To get the dimensions of the Jacobian matrix for the local

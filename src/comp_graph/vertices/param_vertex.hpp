@@ -6,6 +6,7 @@
 #include <memory>
 #include <src/comp_graph/vertices/vertex.hpp>
 #include <src/parameters.hpp>
+#include <stdexcept>
 
 namespace fortis::comp_graph {
 using fortis::parameters::Parameter;
@@ -18,9 +19,8 @@ public:
       : _parameter(std::move(parameter)),
         _output_dimension(_parameter->getValue().size()) {}
 
-  void forward() final { return; }
-  void backward(
-      const std::optional<std::vector<std::vector<float>>> &gradient) final {
+  void forward() final {}
+  void backward() final {
     /**
      * At the time the gradient reaches this parameter, there is no further
      * backpropagation needed. This is the actual gradient update for the
@@ -28,15 +28,30 @@ public:
      * this tutorial on backpropagation.
      * https://www.cs.toronto.edu/~rgrosse/courses/csc321_2017/readings/L06%20Backpropagation.pdf
      */
-    assert(gradient.has_value());
-    _parameter->setGradient(gradient.value());
+    if (!_upstream_gradient.has_value()) {
+      throw std::runtime_error("Cannot propagate the gradient backward without "
+                               "setting the upstream gradient first.");
+    }
+    auto trainable_parameter_count = _parameter->getParameterCount();
+    auto total_gradients = _upstream_gradient.value().size() *
+                           _upstream_gradient.value().at(0).size();
+
+    if (trainable_parameter_count != total_gradients) {
+      throw std::runtime_error(
+          "Invalid gradient encountered during parameter update. The total "
+          "number of trainable parameters does not match the total number of "
+          "gradient updates.");
+    }
+    _parameter->setGradient(_upstream_gradient.value());
   }
   inline std::vector<std::vector<float>> getOutput() const final {
     return _parameter->getValue();
   }
 
-  constexpr uint32_t getOutputSize() const final { return _output_dimension; }
-
+  std::pair<uint32_t, uint32_t> getOutputShape() const final {
+    assert(!_output.empty());
+    return std::make_pair(1, _output.size());
+  }
   inline std::string getName() final { return "Param"; }
 
 private:

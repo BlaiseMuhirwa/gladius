@@ -17,18 +17,18 @@ public:
   explicit InputVertex(std::vector<float> &input)
       : _output(std::make_shared<std::vector<float>>(std::move(input))) {}
 
-  void forward() final { return; }
-  void backward(const std::optional<std::vector<std::vector<float>>> &gradient =
-                    std::nullopt) final {
-    return;
-  }
-
-  constexpr uint32_t getOutputSize() const final { return _output->size(); }
+  void forward() final {}
+  void backward() final {}
 
   inline std::string getName() final { return "Input"; }
 
   inline std::vector<std::vector<float>> getOutput() const override {
     return {*_output};
+  }
+
+  std::pair<uint32_t, uint32_t> getOutputShape() const final {
+    assert(!_output->empty());
+    return std::make_pair(1, _output->size());
   }
 
 private:

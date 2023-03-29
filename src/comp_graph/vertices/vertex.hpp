@@ -65,6 +65,13 @@ public:
    *    for handling everything during the backward computation, we opt to
    *    have this method so that it is clear what steps must be completed
    *    before the backward computations continue unravelling.
+   *
+   * TODO: Change this function to `updateUpstreamGradient`. This implementation
+   *       limits the types of models we can have. For instance, we can't have
+   *       backpropagation through a vertex multiple times, which is something
+   *       we really want. An easy fix would be to always set _upstream_gradient
+   *       to the provided gradient parameter, but there are a few more checks
+   *       that should be taken care of first.
   */
   void inline setUpstreamGradient(std::vector<std::vector<float>> &gradient) {
     if (_upstream_gradient.has_value()) {

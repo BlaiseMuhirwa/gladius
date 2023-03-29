@@ -6,6 +6,7 @@
 #include <memory>
 #include <src/comp_graph/vertices/vertex.hpp>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 namespace fortis::comp_graph {
@@ -17,15 +18,20 @@ class Summation final : public Vertex,
                         public std::enable_shared_from_this<Summation> {
 public:
   Summation(VertexPointer left_input, VertexPointer right_input)
-      : _left_input(std::move(left_input)),
-        _right_input(std::move(right_input)) {
+      : _left_input(left_input), _right_input(right_input) {
 
-    if (_left_input->getOutputSize() != _right_input->getOutputSize()) {
+    auto left_input_shape = _left_input->getOutputShape();
+    auto right_input_shape = _right_input->getOutputShape();
+    bool dimensions_match =
+        (left_input_shape.first == right_input_shape.first) &&
+        (left_input_shape.second == right_input_shape.second);
+
+    if (!dimensions_match) {
       throw std::invalid_argument(
           "Dimension mismatch for the inputs to summation vertex. Make sure "
           "that the two inputs have the same dimensions.");
     }
-    _output.reserve(_left_input->getOutputSize());
+    _output.reserve(left_input_shape.second);
   }
 
   void forward() final {
@@ -40,34 +46,39 @@ public:
    * is passed backward to either input vertex for downstream gradients
    * computations.
    */
-  void backward(const std::optional<std::vector<std::vector<float>>> &gradient =
-                    std::nullopt) final {
-    assert(gradient.has_value());
+  void backward() final {
+    if (!_upstream_gradient.has_value()) {
+      throw std::runtime_error("Cannot propagate the gradient backward without "
+                               "setting the upstream gradient first.");
+    }
+    assert(!_output.empty());
+    assert(_upstream_gradient.value().size() == 1);
+    assert(_upstream_gradient.value().at(0).size() == _output.size());
 
     // Checks if this is the first time backpropagating through this vertex
     // On the first pass we populate the derivative, which I_n x gradient
     // i.e., the upstream gradient is copied over
     if (_gradient.empty()) {
-      // _gradient = std::vector<float>(size_to_allocate, 1.0);
-      _gradient = gradient.value();
+      _gradient = _upstream_gradient.value();
     } else {
-      assert(_gradient.size() == gradient.value().size());
-      assert(_gradient.at(0).size() == gradient.value().at(0).size());
-
       for (uint32_t row_index = 0; row_index < _gradient.size(); row_index++) {
         for (uint32_t col_index = 0; col_index < _gradient.at(0).size();
              col_index++) {
           _gradient[row_index][col_index] +=
-              gradient.value()[row_index][col_index];
+              _upstream_gradient.value()[row_index][col_index];
         }
       }
     }
+    _left_input->setUpstreamGradient(/* gradient = */ _gradient);
+    _right_input->setUpstreamGradient(/* gradient = */ _gradient);
   }
 
   inline std::string getName() final { return "Summation"; }
 
-  constexpr uint32_t getOutputSize() const final {
-    return _left_input->getOutputSize();
+  std::pair<uint32_t, uint32_t> getOutputShape() const final {
+    assert(!_output.empty());
+    auto output_size = _output.size();
+    return std::make_pair(1, output_size);
   }
 
 private:
@@ -84,13 +95,14 @@ private:
   }
   VertexPointer _left_input;
   VertexPointer _right_input;
+  std::vector<std::vector<float>> _gradient;
 
   Summation() {}
   friend class cereal::access;
 
   template <typename Archive> void serialize(Archive &archive) {
     archive(cereal::base_class<Vertex>(this), _left_input, _right_input,
-            _output, _gradient);
+            _gradient, _output, _upstream_gradient);
   }
 };
 

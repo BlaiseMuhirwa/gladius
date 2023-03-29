@@ -46,7 +46,7 @@ public:
 
   void save(const std::string &file_name) const {
     std::ofstream file_stream =
-        fortis::handle_ofstream(file_name, std::ios::binary);
+        fortis::utils::handle_ofstream(file_name, std::ios::binary);
     cereal::BinaryOutputArchive output_archive(file_stream);
 
     output_archive(*this);
@@ -66,17 +66,6 @@ public:
   // }
 
 private:
-  // #ifdef RUN_BENCHMARKS
-  //   static void registerBenchmarkToRun() {
-  //     BENCHMARK(addParameter);
-  //     BENCHMARK(addLookupParameter);
-  //     BENCHMARK(save);
-  //     BENCHMARK(load);
-  //   }
-
-  //   void launchBenchmarks() { BENCHMARK_MAIN(); }
-
-  // #endif
 
   std::vector<std::variant<Parameter, LookupParameter>> _parameters;
 

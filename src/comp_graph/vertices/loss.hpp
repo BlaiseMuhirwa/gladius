@@ -35,13 +35,23 @@ class CrossEntropyLoss final
    * operation.
    */
   CrossEntropyLoss(VertexPointer input_vertex, std::vector<float> &label)
-      : _input(std::move(input_vertex)), _label(std::move(label)) {
-    auto probabilities_vector_size = _input->getOutputSize();
-    if (probabilities_vector_size != _label.size()) {
+      : _input(input_vertex), _label(std::move(label)) {
+    auto probabilities_vector_shape = _input->getOutputShape();
+
+    if (probabilities_vector_shape.first != 1) {
+      throw std::invalid_argument(
+          "The input vector to the cross entropy loss must be a "
+          "uni-dimensional array. Got instead a multi-dimensional array of "
+          "shape (" +
+          std::to_string(probabilities_vector_shape.first) + ", " +
+          std::to_string(probabilities_vector_shape.second) + ").");
+    }
+
+    if (probabilities_vector_shape.second != _label.size()) {
       throw std::invalid_argument(
           "The size of the probability vector must be equal to the size of the "
           "label vector. The Probabilities vector has size " +
-          std::to_string(probabilities_vector_size) +
+          std::to_string(probabilities_vector_shape.second) +
           " while the label vector has size " + std::to_string(_label.size()));
     }
   }
@@ -62,24 +72,20 @@ class CrossEntropyLoss final
    * DCE = [0, 0, ..., (-1/P_j), ..., 0]
    *
    */
-  void backward(const std::optional<std::vector<std::vector<float>>> &gradient =
-                    std::nullopt) final {
-    if (gradient.has_value()) {
-      throw std::invalid_argument("The loss function's backward method should "
-                                  "not have a gradient parameter.");
-    }
-    assert(_gradient.empty());
-    auto output_size = _input->getOutputSize();
+  void backward() final {
+    assert(!_upstream_gradient.has_value());
+    assert(_local_gradient.empty());
+    auto output_shape = _input->getOutputShape();
     auto probabilities = _input->getOutput().at(0);
-    _gradient = std::vector<std::vector<float>>(
-        1, std::vector<float>(output_size, 0.0));
+    _local_gradient = std::vector<std::vector<float>>(
+        1, std::vector<float>(output_shape.second, 0.0));
 
     uint32_t index_with_positive_label = findIndexWithPositiveLabel(_label);
 
     // derivative of -log(P_j) where j is the index
     auto derivative_at_index =
         -(1.f / probabilities.at(index_with_positive_label));
-    _gradient[0][index_with_positive_label] = derivative_at_index;
+    _local_gradient[0][index_with_positive_label] = derivative_at_index;
   }
 
   inline std::string getName() final { return "CrossEntropyLoss"; }
@@ -89,7 +95,7 @@ class CrossEntropyLoss final
     return {{_loss.value()}};
   }
 
-  constexpr uint32_t getOutputSize() const final { return 1; }
+  std::pair<uint32_t, uint32_t> getOutputShape() const final { return {1, 1}; }
 
 private:
   /**
@@ -130,7 +136,8 @@ private:
   std::optional<float> _loss;
 
   template <typename Archive> void serialize(Archive &archive) {
-    archive(cereal::base_class<Vertex>(this), _input, _label, _loss, _gradient);
+    archive(cereal::base_class<Vertex>(this), _input, _label, _loss,
+            _local_gradient);
   }
 };
 
