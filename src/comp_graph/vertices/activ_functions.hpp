@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vertex.hpp"
+#include <_types/_uint32_t.h>
 #include <cassert>
 #include <cereal/access.hpp>
 #include <cereal/types/base_class.hpp>
@@ -10,7 +11,9 @@
 #include <math.h>
 #include <memory>
 #include <optional>
+#include <src/utils.hpp>
 #include <stdexcept>
+#include <utility>
 
 namespace fortis::comp_graph {
 using fortis::comp_graph::Vertex;
@@ -19,20 +22,20 @@ class SoftMaxActivation final
     : public Vertex,
       public std::enable_shared_from_this<SoftMaxActivation> {
 public:
-  SoftMaxActivation() = default;
-
-  std::shared_ptr<SoftMaxActivation>
-  operator()(std::vector<VertexPointer> &&incoming_edges) {
-    if (incoming_edges.size() != 1) {
+  explicit SoftMaxActivation(std::vector<VertexPointer> &&incoming_edges)
+      : _incoming_edges(incoming_edges) {
+    if (_incoming_edges.size() != 1) {
       throw std::runtime_error(
-          "ReLU activation function expects a single vector as "
+          "SoftMax activation function expects a single vector as "
           "input. Received " +
           std::to_string(incoming_edges.size()) + " vectors.");
     }
-    _incoming_edges = std::move(incoming_edges);
     _logits = _incoming_edges.at(0)->getOutput().at(0);
-    return shared_from_this();
   }
+  SoftMaxActivation(const SoftMaxActivation &) = delete;
+  SoftMaxActivation &operator=(const SoftMaxActivation &) = delete;
+  SoftMaxActivation &operator=(SoftMaxActivation &&) = delete;
+
   void forward() final {
     assert(!_logits.empty());
     assert(_output.empty());
@@ -53,17 +56,20 @@ public:
    * then use the chain rule to compute the partials of the loss function w.r.t
    * the logits
    */
-  void backward(const std::optional<std::vector<std::vector<float>>> &gradient =
-                    std::nullopt) final {
-    assert(gradient.has_value());
-    assert(gradient.value().size() == 1);
-    assert(gradient.value().at(0).size() == _output.size());
+  void backward() final {
+
+    if (!_upstream_gradient.has_value()) {
+      throw std::runtime_error("Cannot propagate the gradient backward without "
+                               "setting the upstream gradient first.");
+    }
+    assert(_upstream_gradient.value().size() == 1);
+    assert(_upstream_gradient.value().at(0).size() == _output.size());
     assert(!_output.empty());
     // We will assume that the softmax operation is only connected to
     // one loss function so that backpropagation through this vertex
     // only happens once. As the types of supported models increase,
     // this requirement can be relaxed.
-    assert(_gradient.empty());
+    assert(_local_gradient.empty());
 
     auto num_dimensions = _logits.size();
     std::vector<std::vector<float>> jacobian_matrix(
@@ -81,38 +87,27 @@ public:
       }
     }
 
-    _gradient = std::vector<std::vector<float>>(
+    _local_gradient = std::vector<std::vector<float>>(
         1, std::vector<float>(num_dimensions, 0.f));
 
     for (uint32_t col_index = 0; col_index < num_dimensions; col_index++) {
-      _gradient[0][col_index] = dotProduct(
-          /* vector = */ gradient.value().at(0), /* matrix = */ jacobian_matrix,
+      _local_gradient[0][col_index] = fortis::utils::dotProduct(
+          /* vector = */ _upstream_gradient.value().at(0),
+          /* matrix = */ jacobian_matrix,
           /* col_index = */ col_index);
     }
+    auto previous_vertex = _incoming_edges.at(0);
+    previous_vertex->setUpstreamGradient(/* gradient = */ _local_gradient);
   }
 
-  constexpr uint32_t getOutputSize() const final {
+  std::pair<uint32_t, uint32_t> getOutputShape() const final {
     assert(!_output.empty());
-    return _output.size();
+    return std::make_pair(1, _output.size());
   }
 
   std::string getName() final { return "SoftMax"; }
 
 private:
-  /**
-   * computes the dot product between the given vector and the j^th column
-   * vector in the given matrix, where j is the col_index.
-   */
-  static float dotProduct(const std::vector<float> &vector,
-                          const std::vector<std::vector<float>> &matrix,
-                          uint32_t col_index) {
-    assert(vector.size() == matrix.size());
-    float dot_product = 0.f;
-    for (uint32_t i = 0; i < vector.size(); i++) {
-      dot_product += vector[i] * matrix[i][col_index];
-    }
-    return dot_product;
-  }
   /**
    * Computes the softmax operation for the input logits
    */
@@ -135,7 +130,7 @@ private:
 
   friend class cereal::access;
   template <typename Archive> void serialize(Archive &archive) {
-    archive(_output, _gradient, _incoming_edges);
+    archive(_output, _local_gradient, _upstream_gradient, _incoming_edges);
   }
 };
 
@@ -143,27 +138,19 @@ class ReLUActivation final
     : public Vertex,
       public std::enable_shared_from_this<ReLUActivation> {
 public:
-  ReLUActivation() = default;
-  ReLUActivation &operator=(const ReLUActivation &) = delete;
-  ReLUActivation &operator=(ReLUActivation &&) = delete;
-
-  /**
-   * We return a shared pointer to the underlying object because typically
-   * this provideds us a clean interface for subsequent calls after object
-   * construction. For instance, we might need to launch a forward pass
-   * after calling function call operator.
-   */
-  std::shared_ptr<ReLUActivation>
-  operator()(std::vector<VertexPointer> &&incoming_edges) {
+  explicit ReLUActivation(std::vector<VertexPointer> &&incoming_edges)
+      : _incoming_edges(incoming_edges) {
     if (_incoming_edges.size() != 1) {
       throw std::runtime_error(
-          "ReLU activation function expects a single vector as "
+          "SoftMax activation function expects a single vector as "
           "input. Received " +
           std::to_string(_incoming_edges.size()) + " vectors.");
     }
-    _incoming_edges = std::move(incoming_edges);
-    return shared_from_this();
   }
+
+  ReLUActivation(const ReLUActivation &) = delete;
+  ReLUActivation &operator=(const ReLUActivation &) = delete;
+  ReLUActivation &operator=(ReLUActivation &&) = delete;
 
   void forward() final {
     assert(!_incoming_edges.empty());
@@ -171,15 +158,17 @@ public:
     applyOperation();
   }
 
-  void backward(
-      const std::optional<std::vector<std::vector<float>>> &gradient) final {
-    assert(gradient.has_value());
+  void backward() final {
+    if (!_upstream_gradient.has_value()) {
+      throw std::runtime_error("Cannot propagate the gradient backward without "
+                               "setting the upstream gradient first.");
+    }
     assert(!_output.empty());
 
     auto vector_size = _output.size();
 
-    if (_gradient.empty()) {
-      _gradient = std::vector<float>(vector_size);
+    if (_local_gradient.empty()) {
+      _local_gradient = std::vector<float>(vector_size);
     }
 
     for (uint32_t neuron_index = 0; neuron_index < vector_size;

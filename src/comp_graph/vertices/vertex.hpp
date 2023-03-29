@@ -3,7 +3,9 @@
 #include <cereal/access.hpp>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace fortis::comp_graph {
@@ -42,13 +44,40 @@ public:
    * of the loss function with respect to the given parameter
    * via the chain rule.
    */
-  virtual void backward(const std::optional<std::vector<std::vector<float>>>
-                            &gradient = std::nullopt) = 0;
+  virtual void backward() = 0;
+
+  /**
+   * While this method is indeed part of the mechanics of the backward
+   * computation, there are a few good reasons for having it as a separate
+   * piece of logic.
+
+   * 1. For one, since, at the core, vertices represent unique operations
+   *    in the computation graph, it is possible (and will often happen)
+   *    that one vertex has more than one parent (i.e., the vertex in question
+   *    propagates backwards to more than one other vertex). For example,
+   *    in the expression, z = Ax + b, the vertex representing the addition
+   *    operation has parents "Ax" and "b".
+   *    In such cases, this method ensures that the gradient with respect to
+   *    the proper variable is propagated backwards.
+   *
+   * 2. Secondly, this allows us to also have a clear implementation logic.
+   *    Instead of having a "black-boxy" backward method that is responsible
+   *    for handling everything during the backward computation, we opt to
+   *    have this method so that it is clear what steps must be completed
+   *    before the backward computations continue unravelling.
+  */
+  void inline setUpstreamGradient(std::vector<std::vector<float>> &gradient) {
+    if (_upstream_gradient.has_value()) {
+      throw std::runtime_error("The upstream gradient for vertex " + getName() +
+                               " has already been set.");
+    }
+    _upstream_gradient = std::move(gradient);
+  }
 
   /**
    * Returns the output of the forward pass through the vertex.
    */
-  virtual std::vector<std::vector<float>> getOutput() const {
+  virtual inline std::vector<std::vector<float>> getOutput() const {
     assert(!_output.empty());
     return {_output};
   }
@@ -64,25 +93,31 @@ public:
    * the operation computed by the vertex.
    */
   virtual inline std::vector<std::vector<float>> getGradient() const {
-    assert(!_gradient.empty());
-    return _gradient;
+    assert(!_local_gradient.empty());
+    return _local_gradient;
   }
 
   /**
-   * Returns the size of the output vector computed by the vertex.
-   * TODO: Add support for multiple output dimension with std::tuple
-   * and variadic templates.
+   * Returns the shape of the output vector computed by the vertex.
    */
-  virtual constexpr uint32_t getOutputSize() const = 0;
+  virtual std::pair<uint32_t, uint32_t> getOutputShape() const = 0;
 
 protected:
   std::vector<float> _output;
-  // We will use `gradient` to refer to both the jacobian and gradient
-  // pursuant to the ML literature. Mathematically, they are not really the
-  // same, but for now we will just abuse the term gradient.
-  std::vector<std::vector<float>> _gradient;
 
+  /**
+   * Applies the main operation implemented by the vertex.
+   * For instance, if the vertex computes the expression
+   * z = Ax + b, this method is responsible for implementing
+   * this addition operation.
+   */
   virtual std::shared_ptr<Vertex> applyOperation() = 0;
+
+  // This is an optional because we want the upstream gradient to be null
+  // for any specific vertex until the backward computation arrives
+  // at it.
+  std::optional<std::vector<std::vector<float>>> _upstream_gradient;
+  std::vector<std::vector<float>> _local_gradient;
 
 private:
   friend class cereal::access;

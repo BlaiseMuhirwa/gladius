@@ -84,7 +84,6 @@ private:
   }
   VertexPointer _left_input;
   VertexPointer _right_input;
-  std::vector<float> _output;
 
   Summation() {}
   friend class cereal::access;

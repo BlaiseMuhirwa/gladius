@@ -50,6 +50,8 @@ void initializeParameters(
 /**
  * Parameters needed to build a 3-layer Feed-forward model
  * for MNIST classification.
+ * The following configuration represents a model with a total of
+ * 269,322 trainable parameters.
  */
 std::vector<std::tuple<ParameterType, std::vector<uint32_t>>>
 defineModelParameters() {
