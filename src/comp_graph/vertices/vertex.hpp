@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cereal/access.hpp>
+#include <cereal/types/optional.hpp>
+#include <cereal/types/vector.hpp>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -10,24 +12,32 @@
 
 namespace fortis::comp_graph {
 
-class Vertex;
-using VertexPointer = std::shared_ptr<Vertex>;
+// class Vertex;
+// using VertexPointer = std::shared_ptr<Vertex>;
 
-struct Expression {
-  void operator()(VertexPointer& vertex) { _value = std::move(vertex); }
-  VertexPointer _value;
+// struct Expression {
+//   void operator()(VertexPointer& vertex) { _value = std::move(vertex); }
+//   VertexPointer _value;
 
-  Expression() {}
-  friend class cereal::access;
+//   Expression() {}
+//   friend class cereal::access;
 
-  template <typename Archive>
-  void serialize(Archive& archive) {
-    archive(_value);
-  }
-};
+//   template <typename Archive>
+//   void serialize(Archive& archive) {
+//     archive(_value);
+//   }
+// };
 
 class Vertex {
  public:
+  Vertex() = default;
+  /* Move constructor */
+  Vertex(Vertex&& other) noexcept
+      : _upstream_gradient(std::move(other._upstream_gradient)),
+        _local_gradient(std::move(other._local_gradient)) {}
+
+  /* Move assignment operator */
+
   virtual ~Vertex() = default;
 
   /**
@@ -130,8 +140,9 @@ class Vertex {
   friend class cereal::access;
   template <typename Archive>
   void serialize(Archive& archive) {
-    (void)archive;
+    archive(_upstream_gradient, _local_gradient);
   }
 };
+using VertexPointer = std::shared_ptr<Vertex>;
 
 }  // namespace fortis::comp_graph

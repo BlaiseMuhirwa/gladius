@@ -2,7 +2,10 @@
 
 #include <cereal/access.hpp>
 #include <cereal/types/base_class.hpp>
+#include <cereal/types/memory.hpp>
+#include <cereal/types/optional.hpp>
 #include <cereal/types/polymorphic.hpp>
+#include <cereal/types/vector.hpp>
 #include <_types/_uint32_t.h>
 #include <src/comp_graph/vertices/vertex.hpp>
 #include <src/utils.hpp>
@@ -26,7 +29,8 @@ class Multiplier final : public Vertex,
    * pointers
    */
   Multiplier(VertexPointer left_input, VertexPointer right_input)
-      : _left_input(left_input), _right_input(right_input) {
+      : _left_input(std::move(left_input)),
+        _right_input(std::move(right_input)) {
     auto left_input_shape = _left_input->getOutputShape();
     auto right_input_shape = _right_input->getOutputShape();
 
@@ -88,7 +92,7 @@ class Multiplier final : public Vertex,
     // On the first pass we populate the partial derivatives
     if (_local_right_gradient.empty()) {
       _local_right_gradient =
-          std::vector<std::vector<float>>(1, std::vector<float>(col_size, 0.f));
+          std::vector<std::vector<float>>(1, std::vector<float>(col_size, 0.F));
     }
     auto num_columns = _left_input->getOutputShape().second;
     for (uint32_t col_index = 0; col_index < num_columns; col_index++) {
@@ -113,7 +117,7 @@ class Multiplier final : public Vertex,
     auto num_columns = num_rows * right_input_size;
 
     std::vector<std::vector<float>> jacobian_matrix(
-        num_rows, std::vector<float>(num_columns, 0.f));
+        num_rows, std::vector<float>(num_columns, 0.F));
 
     for (uint32_t row_index = 0; row_index < num_rows; row_index++) {
       for (uint32_t col_index = 0; col_index < num_columns; col_index++) {
@@ -132,7 +136,7 @@ class Multiplier final : public Vertex,
     // On the first pass we populate the partial derivatives
     if (_local_left_gradient.empty()) {
       _local_left_gradient = std::vector<std::vector<float>>(
-          1, std::vector<float>(row_size * col_size, 0.f));
+          1, std::vector<float>(row_size * col_size, 0.F));
     }
 
     for (uint32_t col_index = 0; col_index < (row_size * col_size);
@@ -161,7 +165,7 @@ class Multiplier final : public Vertex,
   std::vector<std::vector<float>> _local_left_gradient;
   std::vector<std::vector<float>> _local_right_gradient;
 
-  Multiplier() {}
+  Multiplier() = default;
   friend class cereal::access;
 
   template <typename Archive>

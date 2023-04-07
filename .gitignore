@@ -4,3 +4,4 @@ src/utils.hpp
 .cache
 data
 openmp.txt
+.clang-tidy

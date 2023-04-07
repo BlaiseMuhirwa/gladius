@@ -2,7 +2,10 @@
 
 #include <cereal/access.hpp>
 #include <cereal/types/base_class.hpp>
+#include <cereal/types/memory.hpp>
+#include <cereal/types/optional.hpp>
 #include <cereal/types/polymorphic.hpp>
+#include <cereal/types/vector.hpp>
 #include <src/comp_graph/vertices/vertex.hpp>
 #include <src/parameters.hpp>
 #include <memory>
@@ -56,9 +59,11 @@ class ParameterVertex final
   inline std::string getName() final { return "Param"; }
 
  private:
-  std::shared_ptr<Vertex> applyOperation() { return shared_from_this(); }
+  std::shared_ptr<Vertex> applyOperation() final { return shared_from_this(); }
   std::unique_ptr<Parameter> _parameter;
   uint32_t _output_dimension;
+
+  ParameterVertex() = default;
 
   friend class cereal::access;
   template <typename Archive>

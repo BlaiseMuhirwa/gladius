@@ -2,7 +2,10 @@
 
 #include <cereal/access.hpp>
 #include <cereal/types/base_class.hpp>
+#include <cereal/types/memory.hpp>
+#include <cereal/types/optional.hpp>
 #include <cereal/types/polymorphic.hpp>
+#include <cereal/types/vector.hpp>
 #include <src/comp_graph/vertices/vertex.hpp>
 #include <memory>
 #include <stdexcept>
@@ -18,7 +21,8 @@ class Summation final : public Vertex,
                         public std::enable_shared_from_this<Summation> {
  public:
   Summation(VertexPointer left_input, VertexPointer right_input)
-      : _left_input(left_input), _right_input(right_input) {
+      : _left_input(std::move(left_input)),
+        _right_input(std::move(right_input)) {
     auto left_input_shape = _left_input->getOutputShape();
     auto right_input_shape = _right_input->getOutputShape();
     bool dimensions_match =
@@ -32,6 +36,12 @@ class Summation final : public Vertex,
     }
     _output.reserve(left_input_shape.second);
   }
+
+  /* Move constructor */
+  Summation(Summation&& other) noexcept
+      : _left_input(std::move(other._left_input)),
+        _right_input(std::move(other._right_input)),
+        _gradient(std::move(other._gradient)) {}
 
   void forward() final {
     assert(_output.empty());
@@ -97,7 +107,8 @@ class Summation final : public Vertex,
   VertexPointer _right_input;
   std::vector<std::vector<float>> _gradient;
 
-  Summation() {}
+  Summation() = default;
+
   friend class cereal::access;
 
   template <typename Archive>

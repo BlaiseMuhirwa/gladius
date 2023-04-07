@@ -2,7 +2,9 @@
 
 #include <cereal/access.hpp>
 #include <cereal/types/base_class.hpp>
+#include <cereal/types/optional.hpp>
 #include <cereal/types/polymorphic.hpp>
+#include <cereal/types/vector.hpp>
 #include <src/comp_graph/vertices/vertex.hpp>
 #include <memory>
 #include <vector>
@@ -35,7 +37,7 @@ class InputVertex final : public Vertex,
   std::shared_ptr<Vertex> applyOperation() final { return shared_from_this(); }
   std::shared_ptr<std::vector<float>> _output;
 
-  InputVertex() {}
+  InputVertex() = default;
   friend class cereal::access;
 
   template <class Archive>

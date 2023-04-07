@@ -2,7 +2,10 @@
 
 #include <cereal/access.hpp>
 #include <cereal/types/base_class.hpp>
+#include <cereal/types/memory.hpp>
+#include <cereal/types/optional.hpp>
 #include <cereal/types/polymorphic.hpp>
+#include <cereal/types/vector.hpp>
 #include <_types/_uint32_t.h>
 #include <src/comp_graph/vertices/vertex.hpp>
 #include <src/utils.hpp>
@@ -51,7 +54,7 @@ class SoftMaxActivation final
   float getPredictedLabel() const {
     // Get iterator pointing to the maximum element
     auto max_iterator = std::max_element(_output.begin(), _output.end());
-    return (float)std::distance(_output.begin(), max_iterator);
+    return static_cast<float>(std::distance(_output.begin(), max_iterator));
   }
 
   /**
@@ -85,7 +88,7 @@ class SoftMaxActivation final
 
     auto num_dimensions = _logits.size();
     std::vector<std::vector<float>> jacobian_matrix(
-        num_dimensions, std::vector<float>(num_dimensions, 0.f));
+        num_dimensions, std::vector<float>(num_dimensions, 0.F));
 
     for (uint32_t row_index = 0; row_index < num_dimensions; row_index++) {
       for (uint32_t col_index = 0; col_index < num_dimensions; col_index++) {
@@ -100,7 +103,7 @@ class SoftMaxActivation final
     }
 
     _local_gradient = std::vector<std::vector<float>>(
-        1, std::vector<float>(num_dimensions, 0.f));
+        1, std::vector<float>(num_dimensions, 0.F));
 
     for (uint32_t col_index = 0; col_index < num_dimensions; col_index++) {
       _local_gradient[0][col_index] = fortis::utils::dotProduct(
@@ -126,7 +129,7 @@ class SoftMaxActivation final
   std::shared_ptr<Vertex> applyOperation() final {
     auto size = _logits.size();
 
-    float sum_exponents = 0.f;
+    float sum_exponents = 0.F;
     std::for_each(_logits.begin(), _logits.end(),
                   [&](float value) { sum_exponents += exp(value); });
 
@@ -140,7 +143,7 @@ class SoftMaxActivation final
   std::vector<VertexPointer> _incoming_edges;
   std::vector<float> _logits;
 
-  SoftMaxActivation() {}
+  SoftMaxActivation() = default;
 
   friend class cereal::access;
   template <typename Archive>
@@ -193,12 +196,12 @@ class ReLUActivation final
     auto dimensions = _output.size();
     if (!_jacobian.has_value()) {
       _jacobian = std::vector<std::vector<float>>(
-          dimensions, std::vector<float>(dimensions, 0.f));
+          dimensions, std::vector<float>(dimensions, 0.F));
 
       auto input_vector = _incoming_edges.at(0)->getOutput();
       for (uint32_t index = 0; index < dimensions; index++) {
         (*_jacobian)[index][index] =
-            input_vector.at(0).at(index) > 0.f ? 1.0 : 0.f;
+            input_vector.at(0).at(index) > 0.F ? 1.0 : 0.F;
       }
     }
     // This is not quite correct since ReLU is not differentiable at 0,
@@ -237,7 +240,7 @@ class ReLUActivation final
   std::vector<VertexPointer> _incoming_edges;
   std::optional<std::vector<std::vector<float>>> _jacobian;
 
-  ReLUActivation() {}
+  ReLUActivation() = default;
 
   friend class cereal::access;
   template <typename Archive>
@@ -272,7 +275,7 @@ class TanHActivation final
   TanHActivation& operator=(TanHActivation&&) = delete;
 
   void forward() final {
-    assert(_incoming_edges.size() != 0);
+    assert(!_incoming_edges.empty());
     assert(_output.empty());
     applyOperation();
   }
@@ -297,7 +300,7 @@ class TanHActivation final
     auto dimensions = _output.size();
     if (!_jacobian.has_value()) {
       _jacobian = std::vector<std::vector<float>>(
-          dimensions, std::vector<float>(dimensions, 0.f));
+          dimensions, std::vector<float>(dimensions, 0.F));
 
       auto input_vector = _incoming_edges.at(0)->getOutput();
       for (uint32_t index = 0; index < dimensions; index++) {
@@ -341,7 +344,7 @@ class TanHActivation final
   std::vector<VertexPointer> _incoming_edges;
   std::optional<std::vector<std::vector<float>>> _jacobian;
 
-  TanHActivation() {}
+  TanHActivation() = default;
 
   friend class cereal::access;
   template <typename Archive>

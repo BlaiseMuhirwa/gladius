@@ -79,6 +79,3 @@ $$
 
 Notice that only $\frac{1}{m}$ entries all non-zero. So, for large values of $m$, $D_{W}\Phi$ is very sparse and we are far better off not computing the matrix above. 
 
-### Why the name Fortis, you ask?
-Well, I have always loved Latin. You can look up what this translates to in English. 
-

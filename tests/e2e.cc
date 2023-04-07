@@ -34,7 +34,7 @@ using fortis::parameters::ParameterType;
 static inline const char* TRAIN_DATA = "data/train-images-idx3-ubyte";
 static inline const char* TRAIN_LABELS = "data/train-labels-idx1-ubyte";
 static inline const uint32_t NUM_LAYERS = 3;
-static inline const float LEARNING_RATE = 0.0001f;
+static inline const float LEARNING_RATE = 0.0001;
 static inline const float ACCURACY_THRESHOLD = 0.9;
 
 void initializeParameters(
@@ -42,11 +42,10 @@ void initializeParameters(
     std::vector<std::tuple<ParameterType, std::vector<uint32_t>>>& parameters) {
   for (const auto& [param_type, dimensions] : parameters) {
     if (param_type == ParameterType::BiasParameter) {
-      assert(dimensions.size() == 1);
+      model->addParameter(/* dimension = */ dimensions[0]);
     } else {
-      assert(dimensions.size() == 2);
+      model->addParameter(/* dimensions = */ dimensions);
     }
-    model->addParameter(/* dimensions = */ dimensions);
   }
 }
 
@@ -102,11 +101,13 @@ TEST(FortisMLPMnist, TestAccuracyScore) {
 
   std::vector<float> losses, predicted_labels;
 
+  std::cout << "[STARTING TRAINING]" << std::endl;
+
   for (uint32_t training_sample_index = 0;
        training_sample_index < images.size(); training_sample_index++) {
     auto normalized_input = fortis::utils::normalizeInput<uint32_t>(
         /* input_vector = */ images[training_sample_index],
-        /* normalizer = */ 255.f);
+        /* normalizer = */ 255.F);
     auto label = one_hot_encoded_labels[training_sample_index];
 
     computation_graph->clearComputationGraph();
@@ -143,9 +144,8 @@ TEST(FortisMLPMnist, TestAccuracyScore) {
       computation_graph->addVertex(summation_op);
 
       if (layer_index < 2) {
-        auto edges = {summation_op};
-        auto relu_activation =
-            std::make_shared<ReLUActivation>(/* incoming_edges = */ edges);
+        std::shared_ptr<ReLUActivation> relu_activation(
+            new ReLUActivation(/* incoming_edges = */ {summation_op}));
         computation_graph->addVertex(relu_activation);
 
         current_activations = relu_activation;
@@ -156,6 +156,8 @@ TEST(FortisMLPMnist, TestAccuracyScore) {
       }
     }
 
+    std::cout << "[END TRAINING]" << std::endl;
+    
     auto [predicted_label, loss] = computation_graph->launchForwardPass();
     losses.push_back(loss);
     predicted_labels.push_back(predicted_label);

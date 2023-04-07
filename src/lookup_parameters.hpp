@@ -7,7 +7,7 @@
 namespace fortis::parameters {
 
 struct LookupParameter {
-  LookupParameter() {}
+  LookupParameter() = default;
   // The constructor takes a variable number of dimensions so that
   // we can, in theory, support arbitrary dimensions. For now
   // the pipeline only supports two dimensions.

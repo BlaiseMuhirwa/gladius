@@ -2,7 +2,10 @@
 
 #include <cereal/access.hpp>
 #include <cereal/types/base_class.hpp>
+#include <cereal/types/memory.hpp>
+#include <cereal/types/optional.hpp>
 #include <cereal/types/polymorphic.hpp>
+#include <cereal/types/vector.hpp>
 #include <_types/_uint32_t.h>
 #include <src/comp_graph/vertices/activ_functions.hpp>
 #include <src/comp_graph/vertices/vertex.hpp>
@@ -27,6 +30,7 @@ using fortis::comp_graph::VertexPointer;
 class CrossEntropyLoss final
     : public Vertex,
       public std::enable_shared_from_this<CrossEntropyLoss> {
+ public:
   /*
    * The constructor expects input vertex to have an output with
    * the same dimension as the label. The output vector computed
@@ -34,7 +38,7 @@ class CrossEntropyLoss final
    * operation.
    */
   CrossEntropyLoss(VertexPointer input_vertex, std::vector<float>& label)
-      : _input(input_vertex), _label(std::move(label)) {
+      : _input(std::move(input_vertex)), _label(std::move(label)) {
     auto probabilities_vector_shape = _input->getOutputShape();
 
     if (probabilities_vector_shape.first != 1) {
@@ -83,7 +87,7 @@ class CrossEntropyLoss final
 
     // derivative of -log(P_j) where j is the index
     auto derivative_at_index =
-        -(1.f / probabilities.at(index_with_positive_label));
+        -(1.F / probabilities.at(index_with_positive_label));
     _local_gradient[0][index_with_positive_label] = derivative_at_index;
   }
 
@@ -119,7 +123,7 @@ class CrossEntropyLoss final
    * https://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/
    */
   std::shared_ptr<Vertex> applyOperation() final {
-    _loss = 0.f;
+    _loss = 0.F;
     auto output_size = _label.size();
     auto probabilities = _input->getOutput().at(0);
     for (uint32_t prob_index = 0; prob_index < output_size; prob_index++) {
@@ -133,6 +137,8 @@ class CrossEntropyLoss final
   // One-hot encoded vector representing the label
   std::vector<float> _label;
   std::optional<float> _loss;
+
+  CrossEntropyLoss() = default;
 
   template <typename Archive>
   void serialize(Archive& archive) {

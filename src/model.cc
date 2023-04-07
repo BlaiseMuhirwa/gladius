@@ -10,8 +10,8 @@
 #include <variant>
 namespace fortis {
 
-static inline float const MEAN = 0.f;
-static inline float const STD_DEV = 1.f;
+static inline float const MEAN = 0.F;
+static inline float const STD_DEV = 1.F;
 
 Parameter& Model::addParameter(uint32_t dimension) {
   std::random_device random_device;
@@ -23,12 +23,12 @@ Parameter& Model::addParameter(uint32_t dimension) {
                   [&] { return distribution(generator); });
 
   auto parameter =
-      std::shared_ptr<Parameter>(new Parameter({parameter_vector}));
+      std::make_shared<Parameter>(Parameter({parameter_vector}));
   _parameters.emplace_back(*parameter);
   return *parameter;
 }
 
-// TODO: Parallelize this implementation with OpenMP
+// TODO(blaise): Parallelize this implementation with OpenMP
 Parameter& Model::addParameter(const std::vector<uint32_t>& dimensions) {
   assert(dimensions.size() == 2);
   auto vector_count = dimensions[0];
@@ -48,13 +48,13 @@ Parameter& Model::addParameter(const std::vector<uint32_t>& dimensions) {
     parameter_vectors.emplace_back(std::move(current_vector));
   }
   auto parameter =
-      std::shared_ptr<Parameter>(new Parameter(std::move(parameter_vectors)));
+      std::make_shared<Parameter>(Parameter(std::move(parameter_vectors)));
 
   _parameters.emplace_back(*parameter);
   return *parameter;
 }
 
-// TODO: Refactor the code below to combine getParameterByID and
+// TODO(blaise): Refactor the code below to combine getParameterByID and
 // getLookupParameterByID
 std::unique_ptr<Parameter> Model::getParameterByID(uint32_t param_id) {
   if (param_id >= _parameters.size()) {
