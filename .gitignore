@@ -4,3 +4,4 @@ dependencies
 src/utils.hpp 
 .cache
 data
+openmp.txt

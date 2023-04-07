@@ -15,8 +15,8 @@ public:
   Graph() : _topologically_sorted_vertices({}), _loss_value(std::nullopt) {}
   Graph(const Graph &) = delete;
   Graph(Graph &&) = delete;
-  Graph& operator=(const Graph&) = delete;
-  Graph& operator=(Graph&&) = delete;
+  Graph &operator=(const Graph &) = delete;
+  Graph &operator=(Graph &&) = delete;
 
   inline void clearComputationGraph() {
     if (!_topologically_sorted_vertices.empty()) {

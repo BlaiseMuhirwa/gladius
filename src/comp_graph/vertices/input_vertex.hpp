@@ -1,9 +1,9 @@
 #pragma once
 
-#include <cereal/access.hpp>
-#include <cereal/types/base_class.hpp>
-#include <cereal/types/polymorphic.hpp>
 #include <memory>
+#include <src/cereal/access.hpp>
+#include <src/cereal/types/base_class.hpp>
+#include <src/cereal/types/polymorphic.hpp>
 #include <src/comp_graph/vertices/vertex.hpp>
 #include <vector>
 
@@ -38,7 +38,7 @@ private:
   InputVertex() {}
   friend class cereal::access;
 
-  template <typename Archive> void serialize(Archive &archive) {
+  template <class Archive> void serialize(Archive &archive) {
     archive(cereal::base_class<Vertex>(this), _output);
   }
 };

@@ -36,6 +36,10 @@ Fortis's architecture consists of the following components:
         example.
         
 ### Getting Started
+Before cloning the repository, make sure you have the following libraries installed on your
+machine:
+- cmake-format 
+
 While cloning this repository remember to also grab the submodule since we are using the 
 following submodule dependencies: [cereal](https://uscilab.github.io/cereal/), [googletest](http://google.github.io/googletest/),
 and [benchmark](https://github.com/google/benchmark). Then, build the library as follows (this will also build the unit tests):
@@ -49,6 +53,7 @@ Note: We currently only support Macs with x86-64 architectures. Support for more
 
 ### Upcoming Features and Optimization
 - Full implementation of the Transformer architecture (scaled dot-product attention, etc.). This will be fun.
+- Fast computations with [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page)
 - Support for data-parallel training 
 - SGD and Adam 
 - Parallel implementations with OpenMP. 
@@ -73,7 +78,6 @@ z_1 & z_2 & \ldots & z_n & \ldots & 0 & 0 & \ldots & 0 \\
 $$
 
 Notice that only $\frac{1}{m}$ entries all non-zero. So, for large values of $m$, $D_{W}\Phi$ is very sparse and we are far better off not computing the matrix above. 
-
 
 ### Why the name Fortis, you ask?
 Well, I have always loved Latin. You can look up what this translates to in English. 

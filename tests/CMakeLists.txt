@@ -4,4 +4,5 @@ include(GoogleTest)
 
 add_executable(FortisMLPMnist e2e.cc)
 
-target_link_libraries(FortisMLPMnist gtest gtest_main fortis)
+target_link_libraries(FortisMLPMnist GTest::gtest_main fortis)
+gtest_discover_tests(FortisMLPMnist)

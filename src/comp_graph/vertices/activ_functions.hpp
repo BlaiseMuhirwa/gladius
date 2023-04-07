@@ -3,14 +3,14 @@
 #include <_types/_uint32_t.h>
 #include <algorithm>
 #include <cassert>
-#include <cereal/access.hpp>
-#include <cereal/types/base_class.hpp>
-#include <cereal/types/polymorphic.hpp>
 #include <cstddef>
 #include <format>
 #include <math.h>
 #include <memory>
 #include <optional>
+#include <src/cereal/access.hpp>
+#include <src/cereal/types/base_class.hpp>
+#include <src/cereal/types/polymorphic.hpp>
 #include <src/comp_graph/vertices/vertex.hpp>
 #include <src/utils.hpp>
 #include <stdexcept>
@@ -140,11 +140,12 @@ private:
   std::vector<VertexPointer> _incoming_edges;
   std::vector<float> _logits;
 
-  SoftMaxActivation() = default;
+  SoftMaxActivation() {}
 
   friend class cereal::access;
   template <typename Archive> void serialize(Archive &archive) {
-    archive(_output, _local_gradient, _upstream_gradient, _incoming_edges);
+    archive(cereal::base_class<Vertex>(this), _output, _local_gradient,
+            _upstream_gradient, _incoming_edges);
   }
 };
 
@@ -234,7 +235,7 @@ private:
   std::vector<VertexPointer> _incoming_edges;
   std::optional<std::vector<std::vector<float>>> _jacobian;
 
-  ReLUActivation() = default;
+  ReLUActivation() {}
 
   friend class cereal::access;
   template <typename Archive> void serialize(Archive &archive) {
@@ -337,9 +338,8 @@ private:
   std::vector<VertexPointer> _incoming_edges;
   std::optional<std::vector<std::vector<float>>> _jacobian;
 
+  TanHActivation() {}
 
-  TanHActivation() = default;
-  
   friend class cereal::access;
   template <typename Archive> void serialize(Archive &archive) {
     archive(cereal::base_class<Vertex>(this), _incoming_edges, _jacobian,
@@ -348,6 +348,8 @@ private:
 };
 
 } // namespace fortis::comp_graph
+
+#include <src/cereal/archives/binary.hpp>
 
 CEREAL_REGISTER_TYPE(fortis::comp_graph::TanHActivation)
 CEREAL_REGISTER_TYPE(fortis::comp_graph::ReLUActivation)
