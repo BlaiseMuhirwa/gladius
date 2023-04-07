@@ -1,5 +1,4 @@
 build
-src/cereal 
 dependencies
 src/utils.hpp 
 .cache

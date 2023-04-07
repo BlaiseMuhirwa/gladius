@@ -1,10 +1,6 @@
 
 #include <_types/_uint32_t.h>
-#include <algorithm>
-#include <cassert>
 #include <gtest/gtest.h>
-#include <iostream>
-#include <memory>
 #include <src/comp_graph/graph.hpp>
 #include <src/comp_graph/vertices/activ_functions.hpp>
 #include <src/comp_graph/vertices/input_vertex.hpp>
@@ -17,6 +13,10 @@
 #include <src/parameters.hpp>
 #include <src/trainer.hpp>
 #include <src/utils.hpp>
+#include <algorithm>
+#include <cassert>
+#include <iostream>
+#include <memory>
 #include <tuple>
 
 namespace fortis::tests {
@@ -31,17 +31,16 @@ using fortis::comp_graph::Vertex;
 using fortis::comp_graph::VertexPointer;
 using fortis::parameters::ParameterType;
 
-static inline const char *TRAIN_DATA = "data/train-images-idx3-ubyte";
-static inline const char *TRAIN_LABELS = "data/train-labels-idx1-ubyte";
+static inline const char* TRAIN_DATA = "data/train-images-idx3-ubyte";
+static inline const char* TRAIN_LABELS = "data/train-labels-idx1-ubyte";
 static inline const uint32_t NUM_LAYERS = 3;
 static inline const float LEARNING_RATE = 0.0001f;
 static inline const float ACCURACY_THRESHOLD = 0.9;
 
 void initializeParameters(
-    std::unique_ptr<fortis::Model> &model,
-    std::vector<std::tuple<ParameterType, std::vector<uint32_t>>> &parameters) {
-
-  for (const auto &[param_type, dimensions] : parameters) {
+    std::unique_ptr<fortis::Model>& model,
+    std::vector<std::tuple<ParameterType, std::vector<uint32_t>>>& parameters) {
+  for (const auto& [param_type, dimensions] : parameters) {
     if (param_type == ParameterType::BiasParameter) {
       assert(dimensions.size() == 1);
     } else {
@@ -67,8 +66,8 @@ defineModelParameters() {
           {ParameterType::BiasParameter, {10}}};
 }
 
-float computeAccuracy(std::vector<float> &predicted_labels,
-                      std::vector<std::vector<float>> &true_labels) {
+float computeAccuracy(std::vector<float>& predicted_labels,
+                      std::vector<std::vector<float>>& true_labels) {
   uint32_t correct_predictions = 0;
   for (uint32_t label_index = 0; label_index < true_labels.size();
        label_index++) {
@@ -169,4 +168,4 @@ TEST(FortisMLPMnist, TestAccuracyScore) {
   ASSERT_GE(accuracy, ACCURACY_THRESHOLD);
 }
 
-} // namespace fortis::tests
+}  // namespace fortis::tests

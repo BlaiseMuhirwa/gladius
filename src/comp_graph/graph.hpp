@@ -1,22 +1,22 @@
 #pragma once
 
+#include <src/comp_graph/vertices/activ_functions.hpp>
+#include <src/comp_graph/vertices/vertex.hpp>
 #include <cstddef>
 #include <optional>
 #include <set>
-#include <src/comp_graph/vertices/activ_functions.hpp>
-#include <src/comp_graph/vertices/vertex.hpp>
 #include <stdexcept>
 #include <vector>
 
 namespace fortis::comp_graph {
 
 class Graph {
-public:
+ public:
   Graph() : _topologically_sorted_vertices({}), _loss_value(std::nullopt) {}
-  Graph(const Graph &) = delete;
-  Graph(Graph &&) = delete;
-  Graph &operator=(const Graph &) = delete;
-  Graph &operator=(Graph &&) = delete;
+  Graph(const Graph&) = delete;
+  Graph(Graph&&) = delete;
+  Graph& operator=(const Graph&) = delete;
+  Graph& operator=(Graph&&) = delete;
 
   inline void clearComputationGraph() {
     if (!_topologically_sorted_vertices.empty()) {
@@ -47,7 +47,7 @@ public:
       vertex->forward();
       if (vertex->getName() == "SoftMax") {
         prediction =
-            dynamic_cast<fortis::comp_graph::SoftMaxActivation *>(vertex.get())
+            dynamic_cast<fortis::comp_graph::SoftMaxActivation*>(vertex.get())
                 ->getPredictedLabel();
       }
     }
@@ -70,9 +70,9 @@ public:
     }
   }
 
-private:
+ private:
   std::vector<VertexPointer> _topologically_sorted_vertices;
   std::optional<float> _loss_value;
 };
 
-} // namespace fortis::comp_graph
+}  // namespace fortis::comp_graph

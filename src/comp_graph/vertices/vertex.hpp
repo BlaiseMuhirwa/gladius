@@ -14,20 +14,20 @@ class Vertex;
 using VertexPointer = std::shared_ptr<Vertex>;
 
 struct Expression {
-
-  void operator()(VertexPointer &vertex) { _value = std::move(vertex); }
+  void operator()(VertexPointer& vertex) { _value = std::move(vertex); }
   VertexPointer _value;
 
   Expression() {}
   friend class cereal::access;
 
-  template <typename Archive> void serialize(Archive &archive) {
+  template <typename Archive>
+  void serialize(Archive& archive) {
     archive(_value);
   }
 };
 
 class Vertex {
-public:
+ public:
   virtual ~Vertex() = default;
 
   /**
@@ -73,7 +73,7 @@ public:
    *       to the provided gradient parameter, but there are a few more checks
    *       that should be taken care of first.
   */
-  void inline setUpstreamGradient(std::vector<std::vector<float>> &gradient) {
+  void inline setUpstreamGradient(std::vector<std::vector<float>>& gradient) {
     if (_upstream_gradient.has_value()) {
       throw std::runtime_error("The upstream gradient for vertex " + getName() +
                                " has already been set.");
@@ -109,7 +109,7 @@ public:
    */
   virtual std::pair<uint32_t, uint32_t> getOutputShape() const = 0;
 
-protected:
+ protected:
   std::vector<float> _output;
 
   /**
@@ -126,11 +126,12 @@ protected:
   std::optional<std::vector<std::vector<float>>> _upstream_gradient;
   std::vector<std::vector<float>> _local_gradient;
 
-private:
+ private:
   friend class cereal::access;
-  template <typename Archive> void serialize(Archive &archive) {
+  template <typename Archive>
+  void serialize(Archive& archive) {
     (void)archive;
   }
 };
 
-} // namespace fortis::comp_graph
+}  // namespace fortis::comp_graph

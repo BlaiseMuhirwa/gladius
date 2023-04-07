@@ -14,4 +14,4 @@ class MultiHeadAttention {
   explicit MultiHeadAttention(uint32_t attention_blocks);
 };
 
-} // namespace fortis::transformer
+}  // namespace fortis::transformer

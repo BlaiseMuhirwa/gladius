@@ -1,12 +1,12 @@
 #pragma once
 
-#include <_types/_uint32_t.h>
 #include <cereal/access.hpp>
 #include <cereal/types/base_class.hpp>
 #include <cereal/types/polymorphic.hpp>
-#include <memory>
+#include <_types/_uint32_t.h>
 #include <src/comp_graph/vertices/vertex.hpp>
 #include <src/utils.hpp>
+#include <memory>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -18,7 +18,7 @@ using fortis::comp_graph::VertexPointer;
 
 class Multiplier final : public Vertex,
                          public std::enable_shared_from_this<Multiplier> {
-public:
+ public:
   /**
    * We do not use std::move(left_input) and std::move(right_input) because
    * the input vertices most likely will be used by other computations in
@@ -54,8 +54,9 @@ public:
 
   void backward() final {
     if (!_upstream_gradient.has_value()) {
-      throw std::runtime_error("Cannot propagate the gradient backward without "
-                               "setting the upstream gradient first.");
+      throw std::runtime_error(
+          "Cannot propagate the gradient backward without "
+          "setting the upstream gradient first.");
     }
     assert(!_output.empty());
     assert(_upstream_gradient.value().size() == 1);
@@ -73,7 +74,7 @@ public:
     return std::make_pair(1, output_size);
   }
 
-private:
+ private:
   /**
    * Note: For now we are assuming that the right input represents
    * some vector (for example, a computation result from ReLU).
@@ -82,7 +83,6 @@ private:
    * is precisely the left input.
    */
   void backwardRightInputImpl() {
-
     auto [row_size, col_size] = _right_input->getOutputShape();
     // Checks if this is the first time backpropagating through this vertex
     // On the first pass we populate the partial derivatives
@@ -164,13 +164,14 @@ private:
   Multiplier() {}
   friend class cereal::access;
 
-  template <typename Archive> void serialize(Archive &archive) {
+  template <typename Archive>
+  void serialize(Archive& archive) {
     archive(cereal::base_class<Vertex>(this), _left_input, _right_input,
             _output, _local_left_gradient, _local_right_gradient,
             _upstream_gradient);
   }
 };
 
-} // namespace fortis::comp_graph
+}  // namespace fortis::comp_graph
 
 CEREAL_REGISTER_TYPE(fortis::comp_graph::Multiplier)

@@ -8,13 +8,13 @@ namespace fortis::trainers {
 
 using fortis::parameters::ParameterType;
 
-GradientDescentTrainer::GradientDescentTrainer(std::unique_ptr<Model> &model,
+GradientDescentTrainer::GradientDescentTrainer(std::unique_ptr<Model>& model,
                                                float learning_rate)
     : _model(std::move(model)), _learning_rate(learning_rate) {}
 
 void GradientDescentTrainer::takeDescentStep() {
   auto parameters = _model->getParameters();
-  for (auto &variant_parameter : parameters) {
+  for (auto& variant_parameter : parameters) {
     auto parameter = std::get<Parameter>(variant_parameter);
     auto computed_gradient = parameter.getGradient();
 
@@ -24,11 +24,12 @@ void GradientDescentTrainer::takeDescentStep() {
           "Error backpropagating the gradients through the network.");
     }
     if (parameter_value.size() != computed_gradient.size()) {
-      throw std::runtime_error("Invalid dimensions for the parameter and "
-                               "computed gradient. The gradient has size " +
-                               std::to_string(computed_gradient.size()) +
-                               " while the parameter has size " +
-                               std::to_string(parameter_value.size()) + ".");
+      throw std::runtime_error(
+          "Invalid dimensions for the parameter and "
+          "computed gradient. The gradient has size " +
+          std::to_string(computed_gradient.size()) +
+          " while the parameter has size " +
+          std::to_string(parameter_value.size()) + ".");
     }
 
     if (parameter.getParameterType() == ParameterType::WeightParameter) {
@@ -36,16 +37,16 @@ void GradientDescentTrainer::takeDescentStep() {
     } else if (parameter.getParameterType() == ParameterType::BiasParameter) {
       updateBiasVectorParameter(parameter_value.at(0), computed_gradient.at(0));
     } else {
-      throw std::runtime_error("Invalid parameter type encountered while "
-                               "attempting parameter update.");
+      throw std::runtime_error(
+          "Invalid parameter type encountered while "
+          "attempting parameter update.");
     }
   }
 }
 
 void GradientDescentTrainer::updateWeightMatrixParameter(
-    std::vector<std::vector<float>> &weight_matrix,
-    std::vector<std::vector<float>> &jacobian) {
-
+    std::vector<std::vector<float>>& weight_matrix,
+    std::vector<std::vector<float>>& jacobian) {
   assert(weight_matrix.size() == jacobian.size());
   assert(weight_matrix.at(0).size() == jacobian.at(0).size());
 
@@ -58,8 +59,7 @@ void GradientDescentTrainer::updateWeightMatrixParameter(
   }
 }
 void GradientDescentTrainer::updateBiasVectorParameter(
-    std::vector<float> &bias_vector, std::vector<float> &gradient) {
-
+    std::vector<float>& bias_vector, std::vector<float>& gradient) {
   assert(bias_vector.size() == gradient.size());
 
   for (uint32_t index = 0; index < bias_vector.size(); index++) {
@@ -67,6 +67,6 @@ void GradientDescentTrainer::updateBiasVectorParameter(
   }
 }
 
-std::unique_ptr<Model> &GradientDescentTrainer::getModel() { return _model; }
+std::unique_ptr<Model>& GradientDescentTrainer::getModel() { return _model; }
 
-} // namespace fortis::trainers
+}  // namespace fortis::trainers

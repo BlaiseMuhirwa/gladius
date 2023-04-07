@@ -3,9 +3,9 @@
 #include <cereal/access.hpp>
 #include <cereal/types/base_class.hpp>
 #include <cereal/types/polymorphic.hpp>
-#include <memory>
 #include <src/comp_graph/vertices/vertex.hpp>
 #include <src/parameters.hpp>
+#include <memory>
 #include <stdexcept>
 
 namespace fortis::comp_graph {
@@ -14,7 +14,7 @@ using fortis::parameters::Parameter;
 class ParameterVertex final
     : public Vertex,
       public std::enable_shared_from_this<ParameterVertex> {
-public:
+ public:
   explicit ParameterVertex(std::unique_ptr<Parameter> parameter)
       : _parameter(std::move(parameter)),
         _output_dimension(_parameter->getValue().size()) {}
@@ -29,8 +29,9 @@ public:
      * https://www.cs.toronto.edu/~rgrosse/courses/csc321_2017/readings/L06%20Backpropagation.pdf
      */
     if (!_upstream_gradient.has_value()) {
-      throw std::runtime_error("Cannot propagate the gradient backward without "
-                               "setting the upstream gradient first.");
+      throw std::runtime_error(
+          "Cannot propagate the gradient backward without "
+          "setting the upstream gradient first.");
     }
     auto trainable_parameter_count = _parameter->getParameterCount();
     auto total_gradients = _upstream_gradient.value().size() *
@@ -54,17 +55,18 @@ public:
   }
   inline std::string getName() final { return "Param"; }
 
-private:
+ private:
   std::shared_ptr<Vertex> applyOperation() { return shared_from_this(); }
   std::unique_ptr<Parameter> _parameter;
   uint32_t _output_dimension;
 
   friend class cereal::access;
-  template <typename Archive> void serialize(Archive &archive) {
+  template <typename Archive>
+  void serialize(Archive& archive) {
     archive(cereal::base_class<Vertex>(this), _parameter);
   }
 };
 
-} // namespace fortis::comp_graph
+}  // namespace fortis::comp_graph
 
 CEREAL_REGISTER_TYPE(fortis::comp_graph::ParameterVertex)

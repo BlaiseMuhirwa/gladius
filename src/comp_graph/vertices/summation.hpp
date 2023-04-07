@@ -3,8 +3,8 @@
 #include <cereal/access.hpp>
 #include <cereal/types/base_class.hpp>
 #include <cereal/types/polymorphic.hpp>
-#include <memory>
 #include <src/comp_graph/vertices/vertex.hpp>
+#include <memory>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -16,10 +16,9 @@ using fortis::comp_graph::VertexPointer;
 
 class Summation final : public Vertex,
                         public std::enable_shared_from_this<Summation> {
-public:
+ public:
   Summation(VertexPointer left_input, VertexPointer right_input)
       : _left_input(left_input), _right_input(right_input) {
-
     auto left_input_shape = _left_input->getOutputShape();
     auto right_input_shape = _right_input->getOutputShape();
     bool dimensions_match =
@@ -48,8 +47,9 @@ public:
    */
   void backward() final {
     if (!_upstream_gradient.has_value()) {
-      throw std::runtime_error("Cannot propagate the gradient backward without "
-                               "setting the upstream gradient first.");
+      throw std::runtime_error(
+          "Cannot propagate the gradient backward without "
+          "setting the upstream gradient first.");
     }
     assert(!_output.empty());
     assert(_upstream_gradient.value().size() == 1);
@@ -81,7 +81,7 @@ public:
     return std::make_pair(1, output_size);
   }
 
-private:
+ private:
   std::shared_ptr<Vertex> applyOperation() final {
     auto left_output_vector = _left_input->getOutput().at(0);
     auto right_output_vector = _right_input->getOutput().at(0);
@@ -100,12 +100,13 @@ private:
   Summation() {}
   friend class cereal::access;
 
-  template <typename Archive> void serialize(Archive &archive) {
+  template <typename Archive>
+  void serialize(Archive& archive) {
     archive(cereal::base_class<Vertex>(this), _left_input, _right_input,
             _gradient, _output, _upstream_gradient);
   }
 };
 
-} // namespace fortis::comp_graph
+}  // namespace fortis::comp_graph
 
 CEREAL_REGISTER_TYPE(fortis::comp_graph::Summation)

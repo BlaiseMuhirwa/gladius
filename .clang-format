@@ -1,0 +1,16 @@
+---
+Language: Cpp
+BasedOnStyle: Google
+DerivePointerAlignment: false
+PointerAlignment: Left
+IncludeBlocks: Merge
+TabWidth: 4
+IncludeCategories:
+  - Regex: '^<cereal/*'
+    Priority: 1000
+  - Regex: '^\"'
+    Priority: 1500
+  - Regex: '^<.*/.*'
+    Priority: 4000
+  - Regex: '^<[^/]*>'
+    Priority: 5000

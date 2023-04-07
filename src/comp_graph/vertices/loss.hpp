@@ -1,14 +1,14 @@
 #pragma once
 
-#include <_types/_uint32_t.h>
-#include <algorithm>
+#include <cereal/access.hpp>
 #include <cereal/types/base_class.hpp>
 #include <cereal/types/polymorphic.hpp>
-#include <memory>
-#include <optional>
-#include <src/cereal/access.hpp>
+#include <_types/_uint32_t.h>
 #include <src/comp_graph/vertices/activ_functions.hpp>
 #include <src/comp_graph/vertices/vertex.hpp>
+#include <algorithm>
+#include <memory>
+#include <optional>
 #include <stdexcept>
 #include <vector>
 
@@ -27,14 +27,13 @@ using fortis::comp_graph::VertexPointer;
 class CrossEntropyLoss final
     : public Vertex,
       public std::enable_shared_from_this<CrossEntropyLoss> {
-
   /*
    * The constructor expects input vertex to have an output with
    * the same dimension as the label. The output vector computed
    * by the input vertex consists of logits prior to a softmax
    * operation.
    */
-  CrossEntropyLoss(VertexPointer input_vertex, std::vector<float> &label)
+  CrossEntropyLoss(VertexPointer input_vertex, std::vector<float>& label)
       : _input(input_vertex), _label(std::move(label)) {
     auto probabilities_vector_shape = _input->getOutputShape();
 
@@ -97,12 +96,12 @@ class CrossEntropyLoss final
 
   std::pair<uint32_t, uint32_t> getOutputShape() const final { return {1, 1}; }
 
-private:
+ private:
   /**
    * Assuming a one-hot encoded vector as an input, this function returns
    * the index in the vector where the label is 1.0
    */
-  static uint32_t findIndexWithPositiveLabel(const std::vector<float> &label) {
+  static uint32_t findIndexWithPositiveLabel(const std::vector<float>& label) {
     auto iterator = std::find(label.begin(), label.end(), 1.0);
     if (iterator != label.end()) {
       return iterator - label.begin();
@@ -135,12 +134,13 @@ private:
   std::vector<float> _label;
   std::optional<float> _loss;
 
-  template <typename Archive> void serialize(Archive &archive) {
+  template <typename Archive>
+  void serialize(Archive& archive) {
     archive(cereal::base_class<Vertex>(this), _input, _label, _loss,
             _local_gradient);
   }
 };
 
-} // namespace fortis::comp_graph
+}  // namespace fortis::comp_graph
 
 CEREAL_REGISTER_TYPE(fortis::comp_graph::CrossEntropyLoss)

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <memory>
-#include <src/cereal/access.hpp>
-#include <src/cereal/archives/binary.hpp>
-#include <src/cereal/types/variant.hpp>
-#include <src/cereal/types/vector.hpp>
+#include <cereal/access.hpp>
+#include <cereal/archives/binary.hpp>
+#include <cereal/types/variant.hpp>
+#include <cereal/types/vector.hpp>
 #include <src/lookup_parameters.hpp>
 #include <src/parameters.hpp>
+#include <memory>
 #include <string>
 #include <variant>
 
@@ -22,18 +22,17 @@ using parameters::Parameter;
 using parameters::ParameterPointer;
 
 class Model {
-
-public:
+ public:
   Model() = default;
 
-  Parameter &addParameter(uint32_t dimension);
+  Parameter& addParameter(uint32_t dimension);
 
   // For now we assume that we only have 2 dimensions for the vector
   // TODO: Relax this assumption
-  Parameter &addParameter(const std::vector<uint32_t> &dimensions);
+  Parameter& addParameter(const std::vector<uint32_t>& dimensions);
 
-  LookupParameter &
-  addLookupParameter(const LookupParameterPointer &lookup_parameter);
+  LookupParameter& addLookupParameter(
+      const LookupParameterPointer& lookup_parameter);
 
   ParameterPointer getParameterByID(uint32_t param_id);
   LookupParameterPointer getLookupParameterByID(uint32_t param_id);
@@ -44,7 +43,7 @@ public:
 
   void updateParameterGradients();
 
-  void save(const std::string &file_name) const {
+  void save(const std::string& file_name) const {
     std::ofstream file_stream =
         fortis::utils::handle_ofstream(file_name, std::ios::binary);
     cereal::BinaryOutputArchive output_archive(file_stream);
@@ -65,13 +64,14 @@ public:
   //   return nullptr;
   // }
 
-private:
+ private:
   std::vector<std::variant<Parameter, LookupParameter>> _parameters;
 
   friend class cereal::access;
-  template <typename Archive> void serialize(Archive &archive) {
+  template <typename Archive>
+  void serialize(Archive& archive) {
     archive(_parameters);
   }
 };
 
-} // namespace fortis
+}  // namespace fortis

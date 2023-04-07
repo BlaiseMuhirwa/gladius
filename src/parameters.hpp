@@ -1,9 +1,9 @@
 #pragma once
 
+#include <cereal/access.hpp>
 #include "utils.hpp"
 #include <ios>
 #include <memory>
-#include <src/cereal/access.hpp>
 #include <stdexcept>
 #include <vector>
 
@@ -12,7 +12,7 @@ namespace fortis::parameters {
 enum class ParameterType { WeightParameter, BiasParameter };
 
 struct Parameter {
-  explicit Parameter(std::vector<std::vector<float>> &&input) {
+  explicit Parameter(std::vector<std::vector<float>>&& input) {
     if (input.empty()) {
       throw std::invalid_argument(
           "Fortis parameter initialization requires a non-empty vector(s).");
@@ -31,7 +31,7 @@ struct Parameter {
 
   std::vector<std::vector<float>> getGradient() const { return _gradient; }
 
-  void setGradient(std::vector<std::vector<float>> &gradient) {
+  void setGradient(std::vector<std::vector<float>>& gradient) {
     _gradient = std::move(gradient);
   }
 
@@ -52,18 +52,19 @@ struct Parameter {
     return ParameterType::WeightParameter;
   }
 
-private:
+ private:
   Parameter(){};
   std::vector<std::vector<float>> _value;
   std::vector<std::vector<float>> _gradient;
 
   friend class cereal::access;
 
-  template <typename Archive> void serialize(Archive &archive) {
+  template <typename Archive>
+  void serialize(Archive& archive) {
     archive(_value, _gradient);
   }
 };
 
 using ParameterPointer = std::unique_ptr<Parameter>;
 
-} // namespace fortis::parameters
+}  // namespace fortis::parameters

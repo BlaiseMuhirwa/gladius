@@ -1,6 +1,11 @@
 #pragma once
 
+#include <cereal/access.hpp>
+#include <cereal/types/base_class.hpp>
+#include <cereal/types/polymorphic.hpp>
 #include <_types/_uint32_t.h>
+#include <src/comp_graph/vertices/vertex.hpp>
+#include <src/utils.hpp>
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
@@ -8,11 +13,6 @@
 #include <math.h>
 #include <memory>
 #include <optional>
-#include <src/cereal/access.hpp>
-#include <src/cereal/types/base_class.hpp>
-#include <src/cereal/types/polymorphic.hpp>
-#include <src/comp_graph/vertices/vertex.hpp>
-#include <src/utils.hpp>
 #include <stdexcept>
 #include <utility>
 
@@ -22,8 +22,8 @@ using fortis::comp_graph::Vertex;
 class SoftMaxActivation final
     : public Vertex,
       public std::enable_shared_from_this<SoftMaxActivation> {
-public:
-  explicit SoftMaxActivation(std::vector<VertexPointer> &&incoming_edges)
+ public:
+  explicit SoftMaxActivation(std::vector<VertexPointer>&& incoming_edges)
       : _incoming_edges(incoming_edges) {
     if (_incoming_edges.size() != 1) {
       throw std::runtime_error(
@@ -33,9 +33,9 @@ public:
     }
     _logits = _incoming_edges.at(0)->getOutput().at(0);
   }
-  SoftMaxActivation(const SoftMaxActivation &) = delete;
-  SoftMaxActivation &operator=(const SoftMaxActivation &) = delete;
-  SoftMaxActivation &operator=(SoftMaxActivation &&) = delete;
+  SoftMaxActivation(const SoftMaxActivation&) = delete;
+  SoftMaxActivation& operator=(const SoftMaxActivation&) = delete;
+  SoftMaxActivation& operator=(SoftMaxActivation&&) = delete;
 
   void forward() final {
     assert(!_logits.empty());
@@ -69,10 +69,10 @@ public:
    * the logits
    */
   void backward() final {
-
     if (!_upstream_gradient.has_value()) {
-      throw std::runtime_error("Cannot propagate the gradient backward without "
-                               "setting the upstream gradient first.");
+      throw std::runtime_error(
+          "Cannot propagate the gradient backward without "
+          "setting the upstream gradient first.");
     }
     assert(_upstream_gradient.value().size() == 1);
     assert(_upstream_gradient.value().at(0).size() == _output.size());
@@ -119,7 +119,7 @@ public:
 
   std::string getName() final { return "SoftMax"; }
 
-private:
+ private:
   /**
    * Computes the softmax operation for the input logits
    */
@@ -130,7 +130,7 @@ private:
     std::for_each(_logits.begin(), _logits.end(),
                   [&](float value) { sum_exponents += exp(value); });
 
-    for (auto &logit : _logits) {
+    for (auto& logit : _logits) {
       float softmax_normalized_logit = exp(logit) / sum_exponents;
       _output.push_back(softmax_normalized_logit);
     }
@@ -143,7 +143,8 @@ private:
   SoftMaxActivation() {}
 
   friend class cereal::access;
-  template <typename Archive> void serialize(Archive &archive) {
+  template <typename Archive>
+  void serialize(Archive& archive) {
     archive(cereal::base_class<Vertex>(this), _output, _local_gradient,
             _upstream_gradient, _incoming_edges);
   }
@@ -152,8 +153,8 @@ private:
 class ReLUActivation final
     : public Vertex,
       public std::enable_shared_from_this<ReLUActivation> {
-public:
-  explicit ReLUActivation(std::vector<VertexPointer> &&incoming_edges)
+ public:
+  explicit ReLUActivation(std::vector<VertexPointer>&& incoming_edges)
       : _incoming_edges(incoming_edges), _jacobian(std::nullopt) {
     if (_incoming_edges.size() != 1) {
       throw std::runtime_error(
@@ -163,9 +164,9 @@ public:
     }
   }
 
-  ReLUActivation(const ReLUActivation &) = delete;
-  ReLUActivation &operator=(const ReLUActivation &) = delete;
-  ReLUActivation &operator=(ReLUActivation &&) = delete;
+  ReLUActivation(const ReLUActivation&) = delete;
+  ReLUActivation& operator=(const ReLUActivation&) = delete;
+  ReLUActivation& operator=(ReLUActivation&&) = delete;
 
   void forward() final {
     assert(!_incoming_edges.empty());
@@ -181,8 +182,9 @@ public:
    */
   void backward() final {
     if (!_upstream_gradient.has_value()) {
-      throw std::runtime_error("Cannot propagate the gradient backward without "
-                               "setting the upstream gradient first.");
+      throw std::runtime_error(
+          "Cannot propagate the gradient backward without "
+          "setting the upstream gradient first.");
     }
     assert(!_output.empty());
     assert(_upstream_gradient.value().size() == 1);
@@ -218,7 +220,7 @@ public:
     return std::make_pair(1, _output.size());
   }
 
-private:
+ private:
   std::shared_ptr<Vertex> applyOperation() final {
     auto incoming_edge = _incoming_edges.at(0);
     auto input_vector = incoming_edge->getOutput().at(0);
@@ -238,7 +240,8 @@ private:
   ReLUActivation() {}
 
   friend class cereal::access;
-  template <typename Archive> void serialize(Archive &archive) {
+  template <typename Archive>
+  void serialize(Archive& archive) {
     archive(cereal::base_class<Vertex>(this), _incoming_edges, _jacobian,
             _local_gradient, _upstream_gradient, _output);
   }
@@ -253,8 +256,8 @@ class TanHActivation final
    *
    *          TanH(x) = \frac{1 - \exp(-2x)}{1 + \exp(-2x)}
    **/
-public:
-  explicit TanHActivation(std::vector<VertexPointer> &&incoming_edges)
+ public:
+  explicit TanHActivation(std::vector<VertexPointer>&& incoming_edges)
       : _incoming_edges(incoming_edges), _jacobian(std::nullopt) {
     if (_incoming_edges.size() != 1) {
       throw std::runtime_error(
@@ -264,9 +267,9 @@ public:
     }
   }
 
-  TanHActivation(const TanHActivation &) = delete;
-  TanHActivation &operator=(const TanHActivation &) = delete;
-  TanHActivation &operator=(TanHActivation &&) = delete;
+  TanHActivation(const TanHActivation&) = delete;
+  TanHActivation& operator=(const TanHActivation&) = delete;
+  TanHActivation& operator=(TanHActivation&&) = delete;
 
   void forward() final {
     assert(_incoming_edges.size() != 0);
@@ -283,8 +286,9 @@ public:
    */
   void backward() final {
     if (!_upstream_gradient.has_value()) {
-      throw std::runtime_error("Cannot propagate the gradient backward without "
-                               "setting the upstream gradient first.");
+      throw std::runtime_error(
+          "Cannot propagate the gradient backward without "
+          "setting the upstream gradient first.");
     }
     assert(_upstream_gradient.value().size() == 1);
     assert(_upstream_gradient.value().at(0).size() == _output.size());
@@ -320,9 +324,8 @@ public:
     return std::make_pair(1, _output.size());
   }
 
-private:
+ private:
   std::shared_ptr<Vertex> applyOperation() final {
-
     auto incoming_edge = _incoming_edges.at(0);
     auto input_vector = incoming_edge->getOutput().at(0);
     auto size = input_vector.size();
@@ -341,15 +344,16 @@ private:
   TanHActivation() {}
 
   friend class cereal::access;
-  template <typename Archive> void serialize(Archive &archive) {
+  template <typename Archive>
+  void serialize(Archive& archive) {
     archive(cereal::base_class<Vertex>(this), _incoming_edges, _jacobian,
             _local_gradient, _upstream_gradient, _output);
   }
 };
 
-} // namespace fortis::comp_graph
+}  // namespace fortis::comp_graph
 
-#include <src/cereal/archives/binary.hpp>
+#include <cereal/archives/binary.hpp>
 
 CEREAL_REGISTER_TYPE(fortis::comp_graph::TanHActivation)
 CEREAL_REGISTER_TYPE(fortis::comp_graph::ReLUActivation)
