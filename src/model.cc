@@ -22,8 +22,7 @@ Parameter& Model::addParameter(uint32_t dimension) {
   std::generate_n(std::back_inserter(parameter_vector), dimension,
                   [&] { return distribution(generator); });
 
-  auto parameter =
-      std::make_shared<Parameter>(Parameter({parameter_vector}));
+  auto parameter = std::make_shared<Parameter>(Parameter({parameter_vector}));
   _parameters.emplace_back(*parameter);
   return *parameter;
 }

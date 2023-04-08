@@ -34,7 +34,8 @@ class Vertex {
   /* Move constructor */
   Vertex(Vertex&& other) noexcept
       : _upstream_gradient(std::move(other._upstream_gradient)),
-        _local_gradient(std::move(other._local_gradient)) {}
+        _local_gradient(std::move(other._local_gradient)),
+        _output(std::move(other._output)) {}
 
   /* Move assignment operator */
 
@@ -120,8 +121,6 @@ class Vertex {
   virtual std::pair<uint32_t, uint32_t> getOutputShape() const = 0;
 
  protected:
-  std::vector<float> _output;
-
   /**
    * Applies the main operation implemented by the vertex.
    * For instance, if the vertex computes the expression
@@ -135,6 +134,7 @@ class Vertex {
   // at it.
   std::optional<std::vector<std::vector<float>>> _upstream_gradient;
   std::vector<std::vector<float>> _local_gradient;
+  std::vector<float> _output;
 
  private:
   friend class cereal::access;

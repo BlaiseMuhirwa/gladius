@@ -19,6 +19,9 @@ class InputVertex final : public Vertex,
   explicit InputVertex(std::vector<float>& input)
       : _output(std::make_shared<std::vector<float>>(std::move(input))) {}
 
+  InputVertex(const InputVertex&) = delete;
+  InputVertex& operator=(const InputVertex&) = delete;
+
   void forward() final {}
   void backward() final {}
 

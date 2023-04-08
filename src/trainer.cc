@@ -8,7 +8,7 @@ namespace fortis::trainers {
 
 using fortis::parameters::ParameterType;
 
-GradientDescentTrainer::GradientDescentTrainer(std::unique_ptr<Model>& model,
+GradientDescentTrainer::GradientDescentTrainer(std::shared_ptr<Model> model,
                                                float learning_rate)
     : _model(std::move(model)), _learning_rate(learning_rate) {}
 
@@ -46,7 +46,7 @@ void GradientDescentTrainer::takeDescentStep() {
 
 void GradientDescentTrainer::updateWeightMatrixParameter(
     std::vector<std::vector<float>>& weight_matrix,
-    std::vector<std::vector<float>>& jacobian) {
+    std::vector<std::vector<float>>& jacobian) const {
   assert(weight_matrix.size() == jacobian.size());
   assert(weight_matrix.at(0).size() == jacobian.at(0).size());
 
@@ -59,7 +59,7 @@ void GradientDescentTrainer::updateWeightMatrixParameter(
   }
 }
 void GradientDescentTrainer::updateBiasVectorParameter(
-    std::vector<float>& bias_vector, std::vector<float>& gradient) {
+    std::vector<float>& bias_vector, std::vector<float>& gradient) const {
   assert(bias_vector.size() == gradient.size());
 
   for (uint32_t index = 0; index < bias_vector.size(); index++) {
@@ -67,6 +67,6 @@ void GradientDescentTrainer::updateBiasVectorParameter(
   }
 }
 
-std::unique_ptr<Model>& GradientDescentTrainer::getModel() { return _model; }
+std::shared_ptr<Model> GradientDescentTrainer::getModel() { return _model; }
 
 }  // namespace fortis::trainers

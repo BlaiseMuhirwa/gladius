@@ -3,9 +3,9 @@
 #include <gtest/gtest.h>
 #include <src/comp_graph/graph.hpp>
 #include <src/comp_graph/vertices/activ_functions.hpp>
+#include <src/comp_graph/vertices/inner_product.hpp>
 #include <src/comp_graph/vertices/input_vertex.hpp>
 #include <src/comp_graph/vertices/loss.hpp>
-#include <src/comp_graph/vertices/mult.hpp>
 #include <src/comp_graph/vertices/param_vertex.hpp>
 #include <src/comp_graph/vertices/summation.hpp>
 #include <src/comp_graph/vertices/vertex.hpp>
@@ -22,10 +22,11 @@
 namespace fortis::tests {
 
 using fortis::comp_graph::CrossEntropyLoss;
+using fortis::comp_graph::InnerProduct;
 using fortis::comp_graph::InputVertex;
-using fortis::comp_graph::Multiplier;
 using fortis::comp_graph::ParameterVertex;
 using fortis::comp_graph::ReLUActivation;
+using fortis::comp_graph::SoftMaxActivation;
 using fortis::comp_graph::Summation;
 using fortis::comp_graph::Vertex;
 using fortis::comp_graph::VertexPointer;
@@ -38,7 +39,7 @@ static inline const float LEARNING_RATE = 0.0001;
 static inline const float ACCURACY_THRESHOLD = 0.9;
 
 void initializeParameters(
-    std::unique_ptr<fortis::Model>& model,
+    std::shared_ptr<fortis::Model>& model,
     std::vector<std::tuple<ParameterType, std::vector<uint32_t>>>& parameters) {
   for (const auto& [param_type, dimensions] : parameters) {
     if (param_type == ParameterType::BiasParameter) {
@@ -89,7 +90,7 @@ TEST(FortisMLPMnist, TestAccuracyScore) {
       fortis::utils::oneHotEncode(
           /* labels = */ labels, /* label_vector_dimension = */ 10);
 
-  std::unique_ptr<fortis::Model> model = std::make_unique<fortis::Model>();
+  std::shared_ptr<fortis::Model> model(new Model());
   auto weights_and_biases_parameters = defineModelParameters();
 
   initializeParameters(/* model = */ model,
@@ -97,6 +98,7 @@ TEST(FortisMLPMnist, TestAccuracyScore) {
 
   auto gradient_descent_trainer = fortis::trainers::GradientDescentTrainer(
       /* model = */ model, /* learning_rate = */ LEARNING_RATE);
+
   auto computation_graph = std::make_unique<fortis::comp_graph::Graph>();
 
   std::vector<float> losses, predicted_labels;
@@ -123,8 +125,10 @@ TEST(FortisMLPMnist, TestAccuracyScore) {
       uint32_t bias_index = weight_index + 1;
 
       // Creates W_i parameter vertex and adds it to the graph
+
       auto weight_parameter = std::make_shared<ParameterVertex>(
           model->getParameterByID(/* param_id = */ weight_index));
+
       computation_graph->addVertex(weight_parameter);
 
       // Creates b_i parameter vertex and adds it to the graph
@@ -133,37 +137,46 @@ TEST(FortisMLPMnist, TestAccuracyScore) {
       computation_graph->addVertex(bias_parameter);
 
       // Representation of the forward-prop through the ith-layer
-      auto multiplication_op = std::make_shared<Multiplier>(
+      auto inner_prod_op = std::make_shared<InnerProduct>(
           /* left_input = */ weight_parameter,
           /* right_input = */ current_activations);
-      computation_graph->addVertex(multiplication_op);
+      computation_graph->addVertex(inner_prod_op);
 
       auto summation_op = std::make_shared<Summation>(
-          /* left_input = */ multiplication_op,
+          /* left_input = */ inner_prod_op,
           /* right_input = */ bias_parameter);
       computation_graph->addVertex(summation_op);
 
       if (layer_index < 2) {
+        std::cout << "[relu]" << std::endl;
         std::shared_ptr<ReLUActivation> relu_activation(
             new ReLUActivation(/* incoming_edges = */ {summation_op}));
         computation_graph->addVertex(relu_activation);
 
         current_activations = relu_activation;
       } else {
+        std::cout << "[softmax]" << std::endl;
+        std::shared_ptr<SoftMaxActivation> softmax(
+            new SoftMaxActivation(/* incoming_edges = */ {summation_op}));
+        computation_graph->addVertex(softmax);
+
+        std::cout << "[cross-entropy]" << std::endl;
+
         auto loss_function = std::make_shared<CrossEntropyLoss>(
-            /* input_vertex = */ summation_op, /* label = */ label);
+            /* input_vertex = */ softmax, /* label = */ label);
         computation_graph->addVertex(loss_function);
       }
+      std::cout << "[layer done]" << std::endl;
     }
 
-    std::cout << "[END TRAINING]" << std::endl;
-    
     auto [predicted_label, loss] = computation_graph->launchForwardPass();
     losses.push_back(loss);
     predicted_labels.push_back(predicted_label);
     computation_graph->launchBackwardPass();
     gradient_descent_trainer.takeDescentStep();
   }
+
+  std::cout << "[END TRAINING]" << std::endl;
 
   auto accuracy = computeAccuracy(predicted_labels, one_hot_encoded_labels);
 

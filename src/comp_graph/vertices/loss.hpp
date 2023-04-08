@@ -89,6 +89,8 @@ class CrossEntropyLoss final
     auto derivative_at_index =
         -(1.F / probabilities.at(index_with_positive_label));
     _local_gradient[0][index_with_positive_label] = derivative_at_index;
+
+    _input->setUpstreamGradient(/* gradient = */ _local_gradient);
   }
 
   inline std::string getName() final { return "CrossEntropyLoss"; }

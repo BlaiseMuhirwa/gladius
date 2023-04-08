@@ -34,7 +34,8 @@ class Summation final : public Vertex,
           "Dimension mismatch for the inputs to summation vertex. Make sure "
           "that the two inputs have the same dimensions.");
     }
-    _output.reserve(left_input_shape.second);
+    _output_length = left_input_shape.second;
+    _output.reserve(_output_length);
   }
 
   /* Move constructor */
@@ -86,9 +87,7 @@ class Summation final : public Vertex,
   inline std::string getName() final { return "Summation"; }
 
   std::pair<uint32_t, uint32_t> getOutputShape() const final {
-    assert(!_output.empty());
-    auto output_size = _output.size();
-    return std::make_pair(1, output_size);
+    return std::make_pair(1, _output_length);
   }
 
  private:
@@ -106,6 +105,7 @@ class Summation final : public Vertex,
   VertexPointer _left_input;
   VertexPointer _right_input;
   std::vector<std::vector<float>> _gradient;
+  uint32_t _output_length;
 
   Summation() = default;
 
@@ -114,7 +114,7 @@ class Summation final : public Vertex,
   template <typename Archive>
   void serialize(Archive& archive) {
     archive(cereal::base_class<Vertex>(this), _left_input, _right_input,
-            _gradient, _output, _upstream_gradient);
+            _gradient, _output, _upstream_gradient, _output_length);
   }
 };
 

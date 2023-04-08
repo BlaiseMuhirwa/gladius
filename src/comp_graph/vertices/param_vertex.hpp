@@ -19,8 +19,7 @@ class ParameterVertex final
       public std::enable_shared_from_this<ParameterVertex> {
  public:
   explicit ParameterVertex(std::unique_ptr<Parameter> parameter)
-      : _parameter(std::move(parameter)),
-        _output_dimension(_parameter->getValue().size()) {}
+      : _parameter(std::move(parameter)) {}
 
   void forward() final {}
   void backward() final {
@@ -53,15 +52,13 @@ class ParameterVertex final
   }
 
   std::pair<uint32_t, uint32_t> getOutputShape() const final {
-    assert(!_output.empty());
-    return std::make_pair(1, _output.size());
+    return _parameter->getParameterShape();
   }
   inline std::string getName() final { return "Param"; }
 
  private:
   std::shared_ptr<Vertex> applyOperation() final { return shared_from_this(); }
   std::unique_ptr<Parameter> _parameter;
-  uint32_t _output_dimension;
 
   ParameterVertex() = default;
 

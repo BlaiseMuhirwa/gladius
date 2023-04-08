@@ -34,16 +34,14 @@ class SoftMaxActivation final
           "input. Received " +
           std::to_string(incoming_edges.size()) + " vectors.");
     }
-    _logits = _incoming_edges.at(0)->getOutput().at(0);
   }
   SoftMaxActivation(const SoftMaxActivation&) = delete;
   SoftMaxActivation& operator=(const SoftMaxActivation&) = delete;
   SoftMaxActivation& operator=(SoftMaxActivation&&) = delete;
 
   void forward() final {
-    assert(!_logits.empty());
     assert(_output.empty());
-
+    _logits = _incoming_edges.at(0)->getOutput().at(0);
     applyOperation();
   }
 
@@ -77,6 +75,10 @@ class SoftMaxActivation final
           "Cannot propagate the gradient backward without "
           "setting the upstream gradient first.");
     }
+    std::cout << "[upstream grad shape]: (" << _upstream_gradient.value().size()
+              << ", " << _upstream_gradient.value().at(0).size() << ")"
+              << std::endl;
+    std::cout << "[softmax-output-size]: " << _output.size() << std::endl;
     assert(_upstream_gradient.value().size() == 1);
     assert(_upstream_gradient.value().at(0).size() == _output.size());
     assert(!_output.empty());
@@ -106,7 +108,7 @@ class SoftMaxActivation final
         1, std::vector<float>(num_dimensions, 0.F));
 
     for (uint32_t col_index = 0; col_index < num_dimensions; col_index++) {
-      _local_gradient[0][col_index] = fortis::utils::dotProduct(
+      _local_gradient[0][col_index] = fortis::utils::innerProduct(
           /* vector = */ _upstream_gradient.value().at(0),
           /* matrix = */ jacobian_matrix,
           /* col_index = */ col_index);
@@ -116,8 +118,10 @@ class SoftMaxActivation final
   }
 
   std::pair<uint32_t, uint32_t> getOutputShape() const final {
-    assert(!_output.empty());
-    return std::make_pair(1, _output.size());
+    auto [rows, cols] = _incoming_edges.at(0)->getOutputShape();
+    std::cout << "[softmax shape forward]: (" << rows << ", " << cols << ")"
+              << std::endl;
+    return {rows, cols};
   }
 
   std::string getName() final { return "SoftMax"; }
@@ -207,7 +211,7 @@ class ReLUActivation final
     // This is not quite correct since ReLU is not differentiable at 0,
     // but we will just set it to 0 at 0
     for (uint32_t col_index = 0; col_index < dimensions; col_index++) {
-      _local_gradient[0][col_index] += fortis::utils::dotProduct(
+      _local_gradient[0][col_index] += fortis::utils::innerProduct(
           /* vector = */ _upstream_gradient.value().at(0),
           /* matrix = */ _jacobian.value(),
           /* col_index = */ col_index);
@@ -219,8 +223,7 @@ class ReLUActivation final
   inline std::string getName() final { return "ReLU"; }
 
   std::pair<uint32_t, uint32_t> getOutputShape() const final {
-    assert(!_output.empty());
-    return std::make_pair(1, _output.size());
+    return _incoming_edges.at(0)->getOutputShape();
   }
 
  private:
@@ -310,7 +313,7 @@ class TanHActivation final
       }
     }
     for (uint32_t col_index = 0; col_index < dimensions; col_index++) {
-      _local_gradient[0][col_index] += fortis::utils::dotProduct(
+      _local_gradient[0][col_index] += fortis::utils::innerProduct(
           /* vector = */ _upstream_gradient.value().at(0),
           /* matrix = */ _jacobian.value(),
           /* col_index = */ col_index);
@@ -323,8 +326,7 @@ class TanHActivation final
   inline std::string getName() final { return "TanH"; }
 
   std::pair<uint32_t, uint32_t> getOutputShape() const final {
-    assert(!_output.empty());
-    return std::make_pair(1, _output.size());
+    return _incoming_edges.at(0)->getOutputShape();
   }
 
  private:

@@ -25,10 +25,17 @@ class Model {
  public:
   Model() = default;
 
+  /* We want to only have one instance of a model running in the background,
+   * which is why we need to delete the copy constructor and copy assignment
+   * operator
+   */
+  Model(const Model&) = delete;
+  Model& operator=(const Model&) = delete;
+
   Parameter& addParameter(uint32_t dimension);
 
   // For now we assume that we only have 2 dimensions for the vector
-  // TODO: Relax this assumption
+  // TODO(blaise): Relax this assumption
   Parameter& addParameter(const std::vector<uint32_t>& dimensions);
 
   LookupParameter& addLookupParameter(
@@ -37,9 +44,11 @@ class Model {
   ParameterPointer getParameterByID(uint32_t param_id);
   LookupParameterPointer getLookupParameterByID(uint32_t param_id);
 
-  std::vector<std::variant<Parameter, LookupParameter>> getParameters() const {
+  std::vector<std::variant<Parameter, LookupParameter>>& getParameters() {
     return _parameters;
   }
+
+  uint32_t getParameterCount() const { return _parameters.size(); }
 
   void updateParameterGradients();
 

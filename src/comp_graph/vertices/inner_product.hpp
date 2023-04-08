@@ -19,16 +19,10 @@ namespace fortis::comp_graph {
 using fortis::comp_graph::Vertex;
 using fortis::comp_graph::VertexPointer;
 
-class Multiplier final : public Vertex,
-                         public std::enable_shared_from_this<Multiplier> {
+class InnerProduct final : public Vertex,
+                           public std::enable_shared_from_this<InnerProduct> {
  public:
-  /**
-   * We do not use std::move(left_input) and std::move(right_input) because
-   * the input vertices most likely will be used by other computations in
-   * either the forward or backward pass. Thus, we simply copy over the
-   * pointers
-   */
-  Multiplier(VertexPointer left_input, VertexPointer right_input)
+  InnerProduct(VertexPointer left_input, VertexPointer right_input)
       : _left_input(std::move(left_input)),
         _right_input(std::move(right_input)) {
     auto left_input_shape = _left_input->getOutputShape();
@@ -36,7 +30,7 @@ class Multiplier final : public Vertex,
 
     if (!(left_input_shape.second == right_input_shape.second)) {
       throw std::invalid_argument(
-          "Dimension mismatch for the inputs to Multiplier vertex. Make sure "
+          "Dimension mismatch for the inputs to InnerProduct vertex. Make sure "
           "that the two inputs have the same dimensions.");
     }
     // We treat the operation as representing Matrix-vector multiplication if
@@ -45,10 +39,12 @@ class Multiplier final : public Vertex,
     // For instance, we can have z = Wx for W with shape (n,d) and x with shape
     // (1, d) or we can have z = u^Tv for u, v with shape (1, d)
     if (left_input_shape.first != right_input_shape.first) {
-      _output.reserve(left_input_shape.first);
+      _output_length = left_input_shape.first;
     } else {
-      _output.reserve(left_input_shape.second);
+      _output_length = left_input_shape.second;
     }
+    std::cout << "[mult] -- allocating size " << _output_length << std::endl;
+    _output.reserve(_output_length);
   }
 
   void forward() final {
@@ -73,9 +69,7 @@ class Multiplier final : public Vertex,
   inline std::string getName() final { return "Multiplication"; }
 
   std::pair<uint32_t, uint32_t> getOutputShape() const final {
-    assert(!_output.empty());
-    auto output_size = _output.size();
-    return std::make_pair(1, output_size);
+    return std::make_pair(1, _output_length);
   }
 
  private:
@@ -96,8 +90,8 @@ class Multiplier final : public Vertex,
     }
     auto num_columns = _left_input->getOutputShape().second;
     for (uint32_t col_index = 0; col_index < num_columns; col_index++) {
-      _local_right_gradient[0][col_index] += fortis::utils::dotProduct(
-          /* vector = */ _upstream_gradient.value().at(0),
+      _local_right_gradient[0][col_index] += fortis::utils::innerProduct(
+          /* vector = */ _upstream_gradient.value().at(0),  // NOLINT
           /* matrix = */ _left_input->getOutput(), /* col_index = */ col_index);
     }
 
@@ -141,8 +135,8 @@ class Multiplier final : public Vertex,
 
     for (uint32_t col_index = 0; col_index < (row_size * col_size);
          col_index++) {
-      _local_left_gradient[0][col_index] += fortis::utils::dotProduct(
-          /* vector = */ _upstream_gradient.value().at(0),
+      _local_left_gradient[0][col_index] += fortis::utils::innerProduct(
+          /* vector = */ _upstream_gradient.value().at(0),  // NOLINT
           /* matrix = */ jacobian_matrix,
           /* col_index = */ col_index);
     }
@@ -150,13 +144,15 @@ class Multiplier final : public Vertex,
   }
 
   std::shared_ptr<Vertex> applyOperation() final {
-    auto left_output_vector = _left_input->getOutput().at(0);
     auto right_output_vector = _right_input->getOutput().at(0);
-    auto vector_size = left_output_vector.size();
+    auto size = _left_input->getOutputShape().first;
 
-    for (uint32_t index = 0; index < vector_size; index++) {
-      _output.emplace_back(left_output_vector[index] *
-                           right_output_vector[index]);
+    for (uint32_t row_index = 0; row_index < size; row_index++) {
+      auto current_row = _left_input->getOutput().at(row_index);
+      auto inner_product = fortis::utils::innerProduct(
+          /*first = */ current_row, /* second = */ right_output_vector);
+
+      _output.emplace_back(inner_product);
     }
     return shared_from_this();
   }
@@ -164,18 +160,19 @@ class Multiplier final : public Vertex,
   VertexPointer _right_input;
   std::vector<std::vector<float>> _local_left_gradient;
   std::vector<std::vector<float>> _local_right_gradient;
+  uint32_t _output_length;
 
-  Multiplier() = default;
+  InnerProduct() = default;
   friend class cereal::access;
 
   template <typename Archive>
   void serialize(Archive& archive) {
     archive(cereal::base_class<Vertex>(this), _left_input, _right_input,
             _output, _local_left_gradient, _local_right_gradient,
-            _upstream_gradient);
+            _upstream_gradient, _output_length);
   }
 };
 
 }  // namespace fortis::comp_graph
 
-CEREAL_REGISTER_TYPE(fortis::comp_graph::Multiplier)
+CEREAL_REGISTER_TYPE(fortis::comp_graph::InnerProduct)

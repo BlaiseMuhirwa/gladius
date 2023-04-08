@@ -2,6 +2,7 @@
 
 #include <cereal/access.hpp>
 #include "utils.hpp"
+#include <_types/_uint32_t.h>
 #include <ios>
 #include <memory>
 #include <stdexcept>
@@ -17,7 +18,7 @@ struct Parameter {
       throw std::invalid_argument(
           "Fortis parameter initialization requires a non-empty vector(s).");
     }
-    _value = input;
+    _value = std::move(input);
   }
 
   /**
@@ -50,6 +51,10 @@ struct Parameter {
       return ParameterType::BiasParameter;
     }
     return ParameterType::WeightParameter;
+  }
+
+  std::pair<uint32_t, uint32_t> getParameterShape() const {
+    return {_value.size(), _value[0].size()};
   }
 
  private:
