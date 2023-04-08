@@ -22,8 +22,8 @@ Parameter& Model::addParameter(uint32_t dimension) {
   std::generate_n(std::back_inserter(parameter_vector), dimension,
                   [&] { return distribution(generator); });
 
-  auto parameter = std::make_shared<Parameter>(Parameter({parameter_vector}));
-  _parameters.emplace_back(*parameter);
+  std::shared_ptr<Parameter> parameter(new Parameter({parameter_vector}));
+  _parameters.emplace_back(parameter);
   return *parameter;
 }
 
@@ -46,23 +46,24 @@ Parameter& Model::addParameter(const std::vector<uint32_t>& dimensions) {
 
     parameter_vectors.emplace_back(std::move(current_vector));
   }
-  auto parameter =
-      std::make_shared<Parameter>(Parameter(std::move(parameter_vectors)));
+  std::shared_ptr<Parameter> parameter(
+      new Parameter(std::move(parameter_vectors)));
 
-  _parameters.emplace_back(*parameter);
+  _parameters.emplace_back(parameter);
   return *parameter;
 }
 
 // TODO(blaise): Refactor the code below to combine getParameterByID and
 // getLookupParameterByID
-std::unique_ptr<Parameter> Model::getParameterByID(uint32_t param_id) {
+std::shared_ptr<Parameter> Model::getParameterByID(uint32_t param_id) {
   if (param_id >= _parameters.size()) {
     throw std::invalid_argument(
         "Invalid ID encountered while attempting to access a model parameter.");
   }
   try {
-    auto parameter = std::get<Parameter>(_parameters[param_id]);
-    return std::make_unique<Parameter>(parameter);
+    auto parameter =
+        std::get<std::shared_ptr<Parameter>>(_parameters[param_id]);
+    return parameter;
   } catch (const std::bad_variant_access& exception) {
     throw std::invalid_argument(
         "param_id is not compatible with the requested parameter type." +
@@ -70,15 +71,16 @@ std::unique_ptr<Parameter> Model::getParameterByID(uint32_t param_id) {
   }
 }
 
-std::unique_ptr<LookupParameter> Model::getLookupParameterByID(
+std::shared_ptr<LookupParameter> Model::getLookupParameterByID(
     uint32_t param_id) {
   if (param_id >= _parameters.size()) {
     throw std::invalid_argument(
         "Invalid ID encountered while attempting to access a model parameter.");
   }
   try {
-    auto parameter = std::get<LookupParameter>(_parameters[param_id]);
-    return std::make_unique<LookupParameter>(parameter);
+    auto parameter =
+        std::get<std::shared_ptr<LookupParameter>>(_parameters[param_id]);
+    return parameter;
   } catch (const std::bad_variant_access& exception) {
     throw std::invalid_argument(
         "param_id is not compatible with the requested parameter type." +

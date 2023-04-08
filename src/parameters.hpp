@@ -27,6 +27,8 @@ struct Parameter {
    *   Parameter &operator=(const Parameter &) = delete;
    *   Parameter &operator=(Parameter &&) = delete;
    */
+  Parameter(const Parameter&) = delete;
+  Parameter& operator=(const Parameter&) = delete;
 
   std::vector<std::vector<float>> getValue() const { return _value; }
 
@@ -41,7 +43,7 @@ struct Parameter {
    * If the parameter wraps a matrix of mxn dimensions, the total
    * number of parameters is mxn
    */
-  inline uint32_t getParameterCount() const {
+  inline uint64_t getParameterCount() const {
     return _value.size() * _value.at(0).size();
   }
 
@@ -69,7 +71,5 @@ struct Parameter {
     archive(_value, _gradient);
   }
 };
-
-using ParameterPointer = std::unique_ptr<Parameter>;
 
 }  // namespace fortis::parameters

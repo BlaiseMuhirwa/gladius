@@ -27,6 +27,10 @@ class Graph {
     }
   }
 
+  uint32_t getVerticesCount() const {
+    return _topologically_sorted_vertices.size();
+  }
+
   void addVertex(VertexPointer vertex) {
     _topologically_sorted_vertices.emplace_back(std::move(vertex));
   }
@@ -52,6 +56,8 @@ class Graph {
       }
     }
     auto loss_vertex = _topologically_sorted_vertices[graph_size - 1];
+    assert(loss_vertex->getName() == "CrossEntropyLoss");
+    
     _loss_value = loss_vertex->getOutput().at(0).at(0);
     return {prediction, _loss_value.value()};
   }
@@ -63,8 +69,7 @@ class Graph {
     }
     auto graph_size = _topologically_sorted_vertices.size();
 
-    for (uint32_t vertex_index = graph_size - 1; vertex_index >= 0;
-         vertex_index--) {
+    for (int vertex_index = graph_size - 1; vertex_index >= 0; vertex_index--) {
       auto vertex = _topologically_sorted_vertices[vertex_index];
       vertex->backward();
     }

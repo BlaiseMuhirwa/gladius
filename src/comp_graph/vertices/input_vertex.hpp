@@ -22,8 +22,8 @@ class InputVertex final : public Vertex,
   InputVertex(const InputVertex&) = delete;
   InputVertex& operator=(const InputVertex&) = delete;
 
-  void forward() final {}
-  void backward() final {}
+  void forward() override {}
+  void backward() override {}
 
   inline std::string getName() final { return "Input"; }
 

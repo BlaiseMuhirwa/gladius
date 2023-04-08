@@ -2,6 +2,7 @@
 
 #include <cereal/access.hpp>
 #include <cereal/archives/binary.hpp>
+#include <cereal/types/memory.hpp>
 #include <cereal/types/variant.hpp>
 #include <cereal/types/vector.hpp>
 #include <src/lookup_parameters.hpp>
@@ -17,9 +18,7 @@
 namespace fortis {
 
 using parameters::LookupParameter;
-using parameters::LookupParameterPointer;
 using parameters::Parameter;
-using parameters::ParameterPointer;
 
 class Model {
  public:
@@ -38,13 +37,14 @@ class Model {
   // TODO(blaise): Relax this assumption
   Parameter& addParameter(const std::vector<uint32_t>& dimensions);
 
-  LookupParameter& addLookupParameter(
-      const LookupParameterPointer& lookup_parameter);
+  LookupParameter& addLookupParameter(LookupParameter& lookup_parameter);
 
-  ParameterPointer getParameterByID(uint32_t param_id);
-  LookupParameterPointer getLookupParameterByID(uint32_t param_id);
+  std::shared_ptr<Parameter> getParameterByID(uint32_t param_id);
+  std::shared_ptr<LookupParameter> getLookupParameterByID(uint32_t param_id);
 
-  std::vector<std::variant<Parameter, LookupParameter>>& getParameters() {
+  std::vector<std::variant<std::shared_ptr<Parameter>,
+                           std::shared_ptr<LookupParameter>>>&
+  getParameters() {
     return _parameters;
   }
 
@@ -74,7 +74,9 @@ class Model {
   // }
 
  private:
-  std::vector<std::variant<Parameter, LookupParameter>> _parameters;
+  std::vector<std::variant<std::shared_ptr<Parameter>,
+                           std::shared_ptr<LookupParameter>>>
+      _parameters;
 
   friend class cereal::access;
   template <typename Archive>

@@ -18,7 +18,7 @@ class ParameterVertex final
     : public Vertex,
       public std::enable_shared_from_this<ParameterVertex> {
  public:
-  explicit ParameterVertex(std::unique_ptr<Parameter> parameter)
+  explicit ParameterVertex(std::shared_ptr<Parameter> parameter)
       : _parameter(std::move(parameter)) {}
 
   void forward() final {}
@@ -35,7 +35,10 @@ class ParameterVertex final
           "Cannot propagate the gradient backward without "
           "setting the upstream gradient first.");
     }
+    // std::cout << "[param-update-start]" << std::endl;
+
     auto trainable_parameter_count = _parameter->getParameterCount();
+
     auto total_gradients = _upstream_gradient.value().size() *
                            _upstream_gradient.value().at(0).size();
 
@@ -45,7 +48,9 @@ class ParameterVertex final
           "number of trainable parameters does not match the total number of "
           "gradient updates.");
     }
+    // std::cout << "[param-starting grads updates]" << std::endl;
     _parameter->setGradient(_upstream_gradient.value());
+    // std::cout << "[param-finished grads updates]" << std::endl;
   }
   inline std::vector<std::vector<float>> getOutput() const final {
     return _parameter->getValue();
@@ -54,11 +59,11 @@ class ParameterVertex final
   std::pair<uint32_t, uint32_t> getOutputShape() const final {
     return _parameter->getParameterShape();
   }
-  inline std::string getName() final { return "Param"; }
+  inline std::string getName() final { return "Parameter"; }
 
  private:
   std::shared_ptr<Vertex> applyOperation() final { return shared_from_this(); }
-  std::unique_ptr<Parameter> _parameter;
+  std::shared_ptr<Parameter> _parameter;
 
   ParameterVertex() = default;
 

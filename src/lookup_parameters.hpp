@@ -22,5 +22,4 @@ struct LookupParameter {
   }
 };
 
-using LookupParameterPointer = std::unique_ptr<LookupParameter>;
 }  // namespace fortis::parameters

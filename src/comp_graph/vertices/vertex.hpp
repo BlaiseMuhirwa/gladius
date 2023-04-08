@@ -89,7 +89,10 @@ class Vertex {
       throw std::runtime_error("The upstream gradient for vertex " + getName() +
                                " has already been set.");
     }
-    _upstream_gradient = std::move(gradient);
+    // TODO(blaise): Come up with a better way to update the gradient
+    //  without doing this copy. We can, for instance, initialize the
+    //  upstream gradient, and then just add to it
+    _upstream_gradient = gradient;
   }
 
   /**

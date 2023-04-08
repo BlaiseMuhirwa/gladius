@@ -67,7 +67,7 @@ class Summation final : public Vertex,
     assert(_upstream_gradient.value().at(0).size() == _output.size());
 
     // Checks if this is the first time backpropagating through this vertex
-    // On the first pass we populate the derivative, which I_n x gradient
+    // On the first pass we populate the derivative, which is I_n x gradient
     // i.e., the upstream gradient is copied over
     if (_gradient.empty()) {
       _gradient = _upstream_gradient.value();
@@ -80,8 +80,10 @@ class Summation final : public Vertex,
         }
       }
     }
+    // std::cout << "[summation-setting upstream grads]" << std::endl;
     _left_input->setUpstreamGradient(/* gradient = */ _gradient);
     _right_input->setUpstreamGradient(/* gradient = */ _gradient);
+    // std::cout << "[summation-finished upstream grads updates]" << std::endl;
   }
 
   inline std::string getName() final { return "Summation"; }

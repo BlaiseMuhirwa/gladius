@@ -37,6 +37,7 @@ static inline const char* TRAIN_LABELS = "data/train-labels-idx1-ubyte";
 static inline const uint32_t NUM_LAYERS = 3;
 static inline const float LEARNING_RATE = 0.0001;
 static inline const float ACCURACY_THRESHOLD = 0.9;
+static inline const uint32_t SAMPLES_TO_TRAIN_WITH = 200;
 
 void initializeParameters(
     std::shared_ptr<fortis::Model>& model,
@@ -84,7 +85,8 @@ float computeAccuracy(std::vector<float>& predicted_labels,
 
 TEST(FortisMLPMnist, TestAccuracyScore) {
   auto [images, labels] = fortis::utils::readMnistDataset(
-      /* image_filename = */ TRAIN_DATA, /* label_filename = */ TRAIN_LABELS);
+      /* image_filename = */ TRAIN_DATA, /* label_filename = */ TRAIN_LABELS,
+      /* chunk_size = */ SAMPLES_TO_TRAIN_WITH);
 
   std::vector<std::vector<float>> one_hot_encoded_labels =
       fortis::utils::oneHotEncode(
@@ -103,10 +105,14 @@ TEST(FortisMLPMnist, TestAccuracyScore) {
 
   std::vector<float> losses, predicted_labels;
 
+  std::cout << "[total number of samples] " << images.size() << std::endl;
   std::cout << "[STARTING TRAINING]" << std::endl;
 
   for (uint32_t training_sample_index = 0;
        training_sample_index < images.size(); training_sample_index++) {
+    std::cout << "[training-example] " << training_sample_index + 1
+              << std::endl;
+
     auto normalized_input = fortis::utils::normalizeInput<uint32_t>(
         /* input_vector = */ images[training_sample_index],
         /* normalizer = */ 255.F);
@@ -148,37 +154,41 @@ TEST(FortisMLPMnist, TestAccuracyScore) {
       computation_graph->addVertex(summation_op);
 
       if (layer_index < 2) {
-        std::cout << "[relu]" << std::endl;
+        // std::cout << "[relu]" << std::endl;
         std::shared_ptr<ReLUActivation> relu_activation(
             new ReLUActivation(/* incoming_edges = */ {summation_op}));
         computation_graph->addVertex(relu_activation);
 
         current_activations = relu_activation;
       } else {
-        std::cout << "[softmax]" << std::endl;
+        // std::cout << "[softmax]" << std::endl;
         std::shared_ptr<SoftMaxActivation> softmax(
             new SoftMaxActivation(/* incoming_edges = */ {summation_op}));
         computation_graph->addVertex(softmax);
-
-        std::cout << "[cross-entropy]" << std::endl;
 
         auto loss_function = std::make_shared<CrossEntropyLoss>(
             /* input_vertex = */ softmax, /* label = */ label);
         computation_graph->addVertex(loss_function);
       }
-      std::cout << "[layer done]" << std::endl;
     }
 
     auto [predicted_label, loss] = computation_graph->launchForwardPass();
+    std::cout << "(pred, loss) = (" << predicted_label << ", " << loss << ")" << std::endl;
     losses.push_back(loss);
     predicted_labels.push_back(predicted_label);
+
+    // std::cout << "[backprop-start]" << std::endl;
     computation_graph->launchBackwardPass();
+
+    // std::cout << "[parameter-update]" << std::endl;
+
     gradient_descent_trainer.takeDescentStep();
   }
 
   std::cout << "[END TRAINING]" << std::endl;
 
   auto accuracy = computeAccuracy(predicted_labels, one_hot_encoded_labels);
+
 
   ASSERT_GE(accuracy, ACCURACY_THRESHOLD);
 }

@@ -75,10 +75,11 @@ class SoftMaxActivation final
           "Cannot propagate the gradient backward without "
           "setting the upstream gradient first.");
     }
-    std::cout << "[upstream grad shape]: (" << _upstream_gradient.value().size()
-              << ", " << _upstream_gradient.value().at(0).size() << ")"
-              << std::endl;
-    std::cout << "[softmax-output-size]: " << _output.size() << std::endl;
+    // std::cout << "[upstream grad shape]: (" <<
+    // _upstream_gradient.value().size()
+    //           << ", " << _upstream_gradient.value().at(0).size() << ")"
+    //           << std::endl;
+    // std::cout << "[softmax-output-size]: " << _output.size() << std::endl;
     assert(_upstream_gradient.value().size() == 1);
     assert(_upstream_gradient.value().at(0).size() == _output.size());
     assert(!_output.empty());
@@ -103,7 +104,7 @@ class SoftMaxActivation final
         }
       }
     }
-
+    // std::cout << "[finished-jacobian-computation]" << std::endl;
     _local_gradient = std::vector<std::vector<float>>(
         1, std::vector<float>(num_dimensions, 0.F));
 
@@ -115,13 +116,11 @@ class SoftMaxActivation final
     }
     auto previous_vertex = _incoming_edges.at(0);
     previous_vertex->setUpstreamGradient(/* gradient = */ _local_gradient);
+    // std::cout << "[softmax-finished upstream grads updates]" << std::endl;
   }
 
   std::pair<uint32_t, uint32_t> getOutputShape() const final {
-    auto [rows, cols] = _incoming_edges.at(0)->getOutputShape();
-    std::cout << "[softmax shape forward]: (" << rows << ", " << cols << ")"
-              << std::endl;
-    return {rows, cols};
+    return _incoming_edges.at(0)->getOutputShape();
   }
 
   std::string getName() final { return "SoftMax"; }
@@ -208,6 +207,9 @@ class ReLUActivation final
             input_vector.at(0).at(index) > 0.F ? 1.0 : 0.F;
       }
     }
+    _local_gradient =
+        std::vector<std::vector<float>>(1, std::vector<float>(dimensions, 0.F));
+
     // This is not quite correct since ReLU is not differentiable at 0,
     // but we will just set it to 0 at 0
     for (uint32_t col_index = 0; col_index < dimensions; col_index++) {
@@ -216,8 +218,10 @@ class ReLUActivation final
           /* matrix = */ _jacobian.value(),
           /* col_index = */ col_index);
     }
+    // std::cout << "[relu-local-grad-comp-done]" << std::endl;
     auto previous_vertex = _incoming_edges.at(0);
     previous_vertex->setUpstreamGradient(/* gradient = */ _local_gradient);
+    // std::cout << "[relu-finished upstream grads updates]" << std::endl;
   }
 
   inline std::string getName() final { return "ReLU"; }

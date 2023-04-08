@@ -15,26 +15,31 @@ GradientDescentTrainer::GradientDescentTrainer(std::shared_ptr<Model> model,
 void GradientDescentTrainer::takeDescentStep() {
   auto parameters = _model->getParameters();
   for (auto& variant_parameter : parameters) {
-    auto parameter = std::get<Parameter>(variant_parameter);
-    auto computed_gradient = parameter.getGradient();
+    auto parameter = std::get<std::shared_ptr<Parameter>>(variant_parameter);
+    auto computed_gradient = parameter->getGradient();
 
-    auto parameter_value = parameter.getValue();
+    auto parameter_value = parameter->getValue();
+
     if (computed_gradient.empty()) {
       throw std::runtime_error(
           "Error backpropagating the gradients through the network.");
     }
-    if (parameter_value.size() != computed_gradient.size()) {
+    uint64_t total_parameter_count = parameter->getParameterCount();
+    uint64_t total_gradient_count =
+        computed_gradient.size() * computed_gradient.at(0).size();
+
+    if (total_parameter_count != total_gradient_count) {
       throw std::runtime_error(
           "Invalid dimensions for the parameter and "
-          "computed gradient. The gradient has size " +
-          std::to_string(computed_gradient.size()) +
-          " while the parameter has size " +
-          std::to_string(parameter_value.size()) + ".");
+          "computed gradient. The computed gradient has " +
+          std::to_string(total_gradient_count) + " inputs " +
+          " while the parameter has " + std::to_string(total_parameter_count) +
+          "total inputs.");
     }
 
-    if (parameter.getParameterType() == ParameterType::WeightParameter) {
+    if (parameter->getParameterType() == ParameterType::WeightParameter) {
       updateWeightMatrixParameter(parameter_value, computed_gradient);
-    } else if (parameter.getParameterType() == ParameterType::BiasParameter) {
+    } else if (parameter->getParameterType() == ParameterType::BiasParameter) {
       updateBiasVectorParameter(parameter_value.at(0), computed_gradient.at(0));
     } else {
       throw std::runtime_error(
@@ -47,14 +52,17 @@ void GradientDescentTrainer::takeDescentStep() {
 void GradientDescentTrainer::updateWeightMatrixParameter(
     std::vector<std::vector<float>>& weight_matrix,
     std::vector<std::vector<float>>& jacobian) const {
-  assert(weight_matrix.size() == jacobian.size());
-  assert(weight_matrix.at(0).size() == jacobian.at(0).size());
+  // assert(weight_matrix.size() == jacobian.size());
+  // assert(weight_matrix.at(0).size() == jacobian.at(0).size());
 
-  for (uint32_t row_index = 0; row_index < weight_matrix.size(); row_index++) {
-    for (uint32_t col_index = 0; col_index < weight_matrix.at(0).size();
-         col_index++) {
+  auto weight_matrix_rows = weight_matrix.size();
+  auto weight_matrix_cols = weight_matrix.at(0).size();
+
+  for (uint64_t row_index = 0; row_index < weight_matrix_rows; row_index++) {
+    for (uint64_t col_index = 0; col_index < weight_matrix_cols; col_index++) {
+      uint64_t jacobian_index = (row_index * weight_matrix_cols) + col_index;
       weight_matrix[row_index][col_index] -=
-          _learning_rate * jacobian[row_index][col_index];
+          _learning_rate * jacobian[0][jacobian_index];
     }
   }
 }

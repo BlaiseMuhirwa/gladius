@@ -43,7 +43,7 @@ class InnerProduct final : public Vertex,
     } else {
       _output_length = left_input_shape.second;
     }
-    std::cout << "[mult] -- allocating size " << _output_length << std::endl;
+    // std::cout << "[mult] -- allocating size " << _output_length << std::endl;
     _output.reserve(_output_length);
   }
 
@@ -64,9 +64,10 @@ class InnerProduct final : public Vertex,
 
     backwardLeftInputImpl();
     backwardRightInputImpl();
+    // std::cout << "[inner-prod-finished upstream grads updates]" << std::endl;
   }
 
-  inline std::string getName() final { return "Multiplication"; }
+  inline std::string getName() final { return "InnerProduct"; }
 
   std::pair<uint32_t, uint32_t> getOutputShape() const final {
     return std::make_pair(1, _output_length);
