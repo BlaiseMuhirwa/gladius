@@ -30,13 +30,11 @@ class ParameterVertex final
      * this tutorial on backpropagation.
      * https://www.cs.toronto.edu/~rgrosse/courses/csc321_2017/readings/L06%20Backpropagation.pdf
      */
-    if (!_upstream_gradient.has_value()) {
+    if (!_upstream_gradient.has_value() || _upstream_gradient.value().empty()) {
       throw std::runtime_error(
           "Cannot propagate the gradient backward without "
           "setting the upstream gradient first.");
     }
-    // std::cout << "[param-update-start]" << std::endl;
-
     auto trainable_parameter_count = _parameter->getParameterCount();
 
     auto total_gradients = _upstream_gradient.value().size() *
@@ -48,9 +46,7 @@ class ParameterVertex final
           "number of trainable parameters does not match the total number of "
           "gradient updates.");
     }
-    // std::cout << "[param-starting grads updates]" << std::endl;
-    _parameter->setGradient(_upstream_gradient.value());
-    // std::cout << "[param-finished grads updates]" << std::endl;
+    _parameter->updateGradient(_upstream_gradient.value());
   }
   inline std::vector<std::vector<float>> getOutput() const final {
     return _parameter->getValue();

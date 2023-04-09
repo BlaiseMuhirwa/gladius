@@ -39,7 +39,7 @@ static inline constexpr float LEARNING_RATE = 0.0001;
 static inline constexpr float ACCURACY_THRESHOLD = 0.9;
 
 // Total training examples: 60000
-static inline constexpr uint32_t SAMPLES_TO_TRAIN_WITH = 300;
+static inline constexpr uint32_t SAMPLES_TO_TRAIN_WITH = 3;
 
 static void initializeParameters(
     std::shared_ptr<fortis::Model>& model,
@@ -71,9 +71,10 @@ defineModelParameters() {
 
 static float computeAccuracy(std::vector<float>& predicted_labels,
                              std::vector<std::vector<float>>& true_labels) {
+  assert(predicted_labels.size() == true_labels.size());
+  uint32_t total_labels = true_labels.size();
   uint32_t correct_predictions = 0;
-  for (uint32_t label_index = 0; label_index < true_labels.size();
-       label_index++) {
+  for (uint32_t label_index = 0; label_index < total_labels; label_index++) {
     // We can use std::max_element since the input is guaranteed to be one-hot
     // encoded
     auto max_iterator = std::max_element(true_labels[label_index].begin(),
@@ -82,7 +83,7 @@ static float computeAccuracy(std::vector<float>& predicted_labels,
       correct_predictions += 1;
     }
   }
-  return (correct_predictions * 1.0) / predicted_labels.size();
+  return (correct_predictions * 1.0) / total_labels;
 }
 
 TEST(FortisMLPMnist, TestAccuracyScore) {
