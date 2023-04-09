@@ -127,20 +127,39 @@ class SoftMaxActivation final
 
  private:
   /**
-   * Computes the softmax operation for the input logits
+   * Computes the softmax operation for the input logits. To prevent
+   * overflow/underflow we use the log-sum-exponent trick to normalize the
+   * exponentiated values. For more on this, check out the following article:
+   * https://gregorygundersen.com/blog/2020/02/09/log-sum-exp/
    */
   std::shared_ptr<Vertex> applyOperation() final {
     auto size = _logits.size();
 
-    float sum_exponents = 0.F;
-    std::for_each(_logits.begin(), _logits.end(),
-                  [&](float value) { sum_exponents += exp(value); });
+    /* compute the max of logits and use it as a scaling factor */
+    auto max_element_iter = std::max_element(_logits.begin(), _logits.end());
+    uint32_t max_index =
+        static_cast<uint32_t>(std::distance(_logits.begin(), max_element_iter));
+
+    auto normalizer = _logits[max_index];
+    auto log_sum_exponent =
+        logSumExponent(/* exponential_normalizer = */ normalizer);
+    log_sum_exponent += normalizer;
 
     for (auto& logit : _logits) {
-      float softmax_normalized_logit = exp(logit) / sum_exponents;
+      float softmax_normalized_logit = exp(logit - log_sum_exponent);
       _output.push_back(softmax_normalized_logit);
     }
     return shared_from_this();
+  }
+
+  float logSumExponent(float exponential_normalizer = 0.F) {
+    float sum_of_scaled_exponents = 0.F;
+    std::for_each(
+        _logits.begin(), _logits.end(),
+        [&sum_of_scaled_exponents, &exponential_normalizer](float logit) {
+          sum_of_scaled_exponents += exp(logit - exponential_normalizer);
+        });
+    return log(sum_of_scaled_exponents);
   }
 
   std::vector<VertexPointer> _incoming_edges;
@@ -218,10 +237,8 @@ class ReLUActivation final
           /* matrix = */ _jacobian.value(),
           /* col_index = */ col_index);
     }
-    // std::cout << "[relu-local-grad-comp-done]" << std::endl;
     auto previous_vertex = _incoming_edges.at(0);
     previous_vertex->setUpstreamGradient(/* gradient = */ _local_gradient);
-    // std::cout << "[relu-finished upstream grads updates]" << std::endl;
   }
 
   inline std::string getName() final { return "ReLU"; }
@@ -239,6 +256,7 @@ class ReLUActivation final
     for (uint32_t neuron_index = 0; neuron_index < size; neuron_index++) {
       float relu_activation =
           input_vector[neuron_index] > 0 ? input_vector[neuron_index] : 0;
+
       _output.push_back(relu_activation);
     }
     return shared_from_this();

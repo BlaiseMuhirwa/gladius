@@ -99,8 +99,9 @@ class Summation final : public Vertex,
     auto vector_size = left_output_vector.size();
 
     for (uint32_t index = 0; index < vector_size; index++) {
-      _output.emplace_back(left_output_vector[index] +
-                           right_output_vector[index]);
+      auto sum = left_output_vector[index] + right_output_vector[index];
+      // std::cout << "[summation val] " << sum << std::endl;
+      _output.emplace_back(sum);
     }
     return shared_from_this();
   }

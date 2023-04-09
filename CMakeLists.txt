@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.18)
 
 project(fortis_nn LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_C_COMPILER /usr/bin/clang)
 set(CMAKE_CXX_COMPILER /usr/bin/clang++)
@@ -47,7 +47,7 @@ endif(NOT OpenMP_FOUND)
 
 # set compiler flags TODO: Add -lbenchmark compiler flag and the corresponding
 # benchmark submodule https://github.com/google/benchmark
-set(CMAKE_CXX_FLAGS " -std=c++17 -O3")
+set(CMAKE_CXX_FLAGS " -std=c++20 -O3")
 
 include_directories(".")
 include_directories(${CMAKE_BINARY_DIR})

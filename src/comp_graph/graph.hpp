@@ -57,7 +57,7 @@ class Graph {
     }
     auto loss_vertex = _topologically_sorted_vertices[graph_size - 1];
     assert(loss_vertex->getName() == "CrossEntropyLoss");
-    
+
     _loss_value = loss_vertex->getOutput().at(0).at(0);
     return {prediction, _loss_value.value()};
   }

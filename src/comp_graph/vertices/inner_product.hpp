@@ -153,6 +153,8 @@ class InnerProduct final : public Vertex,
       auto inner_product = fortis::utils::innerProduct(
           /*first = */ current_row, /* second = */ right_output_vector);
 
+      // std::cout << "[inner-prod val] " << inner_product << std::endl;
+
       _output.emplace_back(inner_product);
     }
     return shared_from_this();

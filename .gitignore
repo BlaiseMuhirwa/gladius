@@ -1,7 +1,9 @@
 build
+python-baselines
 dependencies
 src/utils.hpp 
 .cache
+.env
 data
 openmp.txt
 .clang-tidy

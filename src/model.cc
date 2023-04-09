@@ -11,7 +11,7 @@
 namespace fortis {
 
 static inline float const MEAN = 0.F;
-static inline float const STD_DEV = 1.F;
+static inline float const STD_DEV = std::sqrt(2.0F / (794 * 1.0F));
 
 Parameter& Model::addParameter(uint32_t dimension) {
   std::random_device random_device;

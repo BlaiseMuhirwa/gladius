@@ -129,8 +129,12 @@ class CrossEntropyLoss final
     auto output_size = _label.size();
     auto probabilities = _input->getOutput().at(0);
     for (uint32_t prob_index = 0; prob_index < output_size; prob_index++) {
+      std::cout << "[softmax-normalized logit] " << probabilities[prob_index]
+                << std::endl;
       (*_loss) += _label[prob_index] * log(probabilities[prob_index]);
     }
+    (*_loss) = -(*_loss);
+    std::cout << "[computed loss]: " << _loss.value() << std::endl;
     return shared_from_this();
   }
 

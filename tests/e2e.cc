@@ -34,12 +34,14 @@ using fortis::parameters::ParameterType;
 
 static inline const char* TRAIN_DATA = "data/train-images-idx3-ubyte";
 static inline const char* TRAIN_LABELS = "data/train-labels-idx1-ubyte";
-static inline const uint32_t NUM_LAYERS = 3;
-static inline const float LEARNING_RATE = 0.0001;
-static inline const float ACCURACY_THRESHOLD = 0.9;
-static inline const uint32_t SAMPLES_TO_TRAIN_WITH = 200;
+static inline constexpr uint32_t NUM_LAYERS = 3;
+static inline constexpr float LEARNING_RATE = 0.0001;
+static inline constexpr float ACCURACY_THRESHOLD = 0.9;
 
-void initializeParameters(
+// Total training examples: 60000
+static inline constexpr uint32_t SAMPLES_TO_TRAIN_WITH = 300;
+
+static void initializeParameters(
     std::shared_ptr<fortis::Model>& model,
     std::vector<std::tuple<ParameterType, std::vector<uint32_t>>>& parameters) {
   for (const auto& [param_type, dimensions] : parameters) {
@@ -57,7 +59,7 @@ void initializeParameters(
  * The following configuration represents a model with a total of
  * 269,322 trainable parameters.
  */
-std::vector<std::tuple<ParameterType, std::vector<uint32_t>>>
+static std::vector<std::tuple<ParameterType, std::vector<uint32_t>>>
 defineModelParameters() {
   return {{ParameterType::WeightParameter, {256, 784}},
           {ParameterType::BiasParameter, {256}},
@@ -67,8 +69,8 @@ defineModelParameters() {
           {ParameterType::BiasParameter, {10}}};
 }
 
-float computeAccuracy(std::vector<float>& predicted_labels,
-                      std::vector<std::vector<float>>& true_labels) {
+static float computeAccuracy(std::vector<float>& predicted_labels,
+                             std::vector<std::vector<float>>& true_labels) {
   uint32_t correct_predictions = 0;
   for (uint32_t label_index = 0; label_index < true_labels.size();
        label_index++) {
@@ -84,8 +86,8 @@ float computeAccuracy(std::vector<float>& predicted_labels,
 }
 
 TEST(FortisMLPMnist, TestAccuracyScore) {
-  auto [images, labels] = fortis::utils::readMnistDataset(
-      /* image_filename = */ TRAIN_DATA, /* label_filename = */ TRAIN_LABELS,
+  auto [images, labels] = fortis::utils::readMNISTDataset(
+      /* images_filename = */ TRAIN_DATA, /* labels_filename = */ TRAIN_LABELS,
       /* chunk_size = */ SAMPLES_TO_TRAIN_WITH);
 
   std::vector<std::vector<float>> one_hot_encoded_labels =
@@ -105,7 +107,6 @@ TEST(FortisMLPMnist, TestAccuracyScore) {
 
   std::vector<float> losses, predicted_labels;
 
-  std::cout << "[total number of samples] " << images.size() << std::endl;
   std::cout << "[STARTING TRAINING]" << std::endl;
 
   for (uint32_t training_sample_index = 0;
@@ -113,15 +114,13 @@ TEST(FortisMLPMnist, TestAccuracyScore) {
     std::cout << "[training-example] " << training_sample_index + 1
               << std::endl;
 
-    auto normalized_input = fortis::utils::normalizeInput<uint32_t>(
-        /* input_vector = */ images[training_sample_index],
-        /* normalizer = */ 255.F);
     auto label = one_hot_encoded_labels[training_sample_index];
 
     computation_graph->clearComputationGraph();
 
     // Creates input vertex and adds it to the graph
-    auto input_vertex = std::make_shared<InputVertex>(normalized_input);
+    auto input_vertex =
+        std::make_shared<InputVertex>(images[training_sample_index]);
     computation_graph->addVertex(input_vertex);
 
     std::shared_ptr<Vertex> current_activations = input_vertex;
@@ -173,7 +172,8 @@ TEST(FortisMLPMnist, TestAccuracyScore) {
     }
 
     auto [predicted_label, loss] = computation_graph->launchForwardPass();
-    std::cout << "(pred, loss) = (" << predicted_label << ", " << loss << ")" << std::endl;
+    std::cout << "(pred, loss) = (" << predicted_label << ", " << loss << ")"
+              << std::endl;
     losses.push_back(loss);
     predicted_labels.push_back(predicted_label);
 
@@ -188,7 +188,6 @@ TEST(FortisMLPMnist, TestAccuracyScore) {
   std::cout << "[END TRAINING]" << std::endl;
 
   auto accuracy = computeAccuracy(predicted_labels, one_hot_encoded_labels);
-
 
   ASSERT_GE(accuracy, ACCURACY_THRESHOLD);
 }
