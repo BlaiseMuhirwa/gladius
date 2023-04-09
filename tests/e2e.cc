@@ -39,7 +39,7 @@ static inline constexpr float LEARNING_RATE = 0.0001;
 static inline constexpr float ACCURACY_THRESHOLD = 0.9;
 
 // Total training examples: 60000
-static inline constexpr uint32_t SAMPLES_TO_TRAIN_WITH = 3;
+static inline constexpr uint32_t SAMPLES_TO_TRAIN_WITH = 300;
 
 static void initializeParameters(
     std::shared_ptr<fortis::Model>& model,

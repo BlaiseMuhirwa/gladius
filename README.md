@@ -26,7 +26,7 @@ Fortis's architecture consists of the following components:
         Crucially, they are not objects. Fortis defines many different operations, including
         addition, multiplication, softmax, tanh, etc. 
 - `Builder classes`: These define interfaces for building different networks. In our case, we
-        will be only interested in implementing the transformer network, but one should not 
+        will mostly be interested in implementing the transformer network, but one should not 
         have a hard time having a recurrent neural network builder, for instance. 
         These work on top of expressions and operations and provide easy-to-use libraries. 
         More discussion on builders below. 
@@ -36,11 +36,12 @@ Fortis's architecture consists of the following components:
         example.
         
 ### Getting Started
-Before cloning the repository, make sure you have the following libraries installed on your
+Before cloning the repository, make sure you have the following installed on your
 machine:
 - cmake-format 
+- clang-format 
 
-While cloning this repository remember to also grab the submodule since we are using the 
+While cloning this repository remember to also grab the submodules since we are using the 
 following submodule dependencies: [cereal](https://uscilab.github.io/cereal/), [googletest](http://google.github.io/googletest/),
 and [benchmark](https://github.com/google/benchmark). Then, build the library as follows (this will also build the unit tests):
 
@@ -61,7 +62,7 @@ Note: We currently only support Macs with x86-64 architectures. Support for more
 derive every single gradient update. This turns out to be very inefficient since the Jacobian for Fully-Connected Layers is very sparse, so we 
 can benefit a lot from not computing it. 
 
-To get a sense of the sparsity of the Jacobian, consider the following case. Suppose we have a weight matrix $W \in \mathbb{R}^{m\times n}$ and a vector of activations computed by a ReLU function, $z \in \mathbb{R}^{n}$. Let $\Phi: \mathbb{R}^{m\times n}\times \mathbb{R}^{n} \to \mathbb{R}^{m}$ be the map
+To get a sense of the sparsity of the Jacobian, consider the following case. Suppose we have a weight matrix $W \in \mathbb{R}^{m\times n}$ and a vector of activations computed by the ReLU function, $z \in \mathbb{R}^{n}$. Let $\Phi: \mathbb{R}^{m\times n}\times \mathbb{R}^{n} \to \mathbb{R}^{m}$ be the map
 
 $$
 \Phi(W,z) = Wz
