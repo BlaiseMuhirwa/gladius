@@ -2,6 +2,7 @@
 #include <_types/_uint32_t.h>
 #include <src/parameters.hpp>
 #include <src/trainer.hpp>
+#include <omp.h>
 #include <stdexcept>
 
 namespace fortis::trainers {
@@ -58,6 +59,9 @@ void GradientDescentTrainer::updateWeightMatrixParameter(
   auto weight_matrix_rows = weight_matrix.size();
   auto weight_matrix_cols = weight_matrix.at(0).size();
 
+#pragma omp parallel for default(none)                                      \
+    shared(weight_matrix_rows, weight_matrix_cols, weight_matrix, jacobian, \
+           _learning_rate)
   for (uint64_t row_index = 0; row_index < weight_matrix_rows; row_index++) {
     for (uint64_t col_index = 0; col_index < weight_matrix_cols; col_index++) {
       uint64_t jacobian_index = (row_index * weight_matrix_cols) + col_index;
@@ -70,6 +74,8 @@ void GradientDescentTrainer::updateBiasVectorParameter(
     std::vector<float>& bias_vector, std::vector<float>& gradient) const {
   assert(bias_vector.size() == gradient.size());
 
+#pragma omp parallel for default(none) \
+    shared(_learning_rate, gradient, bias_vector)
   for (uint32_t index = 0; index < bias_vector.size(); index++) {
     bias_vector[index] -= _learning_rate * gradient[index];
   }

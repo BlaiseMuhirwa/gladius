@@ -3,6 +3,7 @@
 #include <src/comp_graph/vertices/activ_functions.hpp>
 #include <src/comp_graph/vertices/vertex.hpp>
 #include <cstddef>
+#include <omp.h>
 #include <optional>
 #include <set>
 #include <stdexcept>

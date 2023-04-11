@@ -7,3 +7,4 @@ src/utils.hpp
 data
 openmp.txt
 .clang-tidy
+.DS_Store

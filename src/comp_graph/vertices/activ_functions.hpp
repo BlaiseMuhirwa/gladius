@@ -48,6 +48,7 @@ class SoftMaxActivation final
   /**
    * The predicted label corresponds to the argmax over all elements in the
    * output. We return the index of the maximizer
+   * TODO: Maybe parallelize this implementation?
    */
   float getPredictedLabel() const {
     // Get iterator pointing to the maximum element

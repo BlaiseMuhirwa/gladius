@@ -1,5 +1,3 @@
-
-#include <_types/_uint32_t.h>
 #include <gtest/gtest.h>
 #include <src/comp_graph/graph.hpp>
 #include <src/comp_graph/vertices/activ_functions.hpp>
@@ -17,7 +15,12 @@
 #include <cassert>
 #include <iostream>
 #include <memory>
-#include <tuple>
+
+#ifdef _OPENMP
+
+#include <omp.h>
+
+#endif
 
 namespace fortis::tests {
 
@@ -39,7 +42,7 @@ static inline constexpr float LEARNING_RATE = 0.0001;
 static inline constexpr float ACCURACY_THRESHOLD = 0.9;
 
 // Total training examples: 60000
-static inline constexpr uint32_t SAMPLES_TO_TRAIN_WITH = 300;
+static inline constexpr uint32_t SAMPLES_TO_TRAIN_WITH = 100;
 
 static void initializeParameters(
     std::shared_ptr<fortis::Model>& model,
@@ -87,9 +90,12 @@ static float computeAccuracy(std::vector<float>& predicted_labels,
 }
 
 TEST(FortisMLPMnist, TestAccuracyScore) {
-  auto [images, labels] = fortis::utils::readMNISTDataset(
+  auto dataset = fortis::utils::readMNISTDataset(
       /* images_filename = */ TRAIN_DATA, /* labels_filename = */ TRAIN_LABELS,
       /* chunk_size = */ SAMPLES_TO_TRAIN_WITH);
+
+  auto images = dataset.first;
+  auto labels = dataset.second;
 
   std::vector<std::vector<float>> one_hot_encoded_labels =
       fortis::utils::oneHotEncode(
@@ -110,80 +116,82 @@ TEST(FortisMLPMnist, TestAccuracyScore) {
 
   std::cout << "[STARTING TRAINING]" << std::endl;
 
-  for (uint32_t training_sample_index = 0;
-       training_sample_index < images.size(); training_sample_index++) {
-    std::cout << "[training-example] " << training_sample_index + 1
-              << std::endl;
+  // #pragma omp parallel for default(none)                                       \
+//     shared(one_hot_encoded_labels, computation_graph, images, model, losses, \
+//            predicted_labels, gradient_descent_trainer)
+  {
+    for (uint32_t training_sample_index = 0;
+         training_sample_index < images.size(); training_sample_index++) {
+      printf("threads: %d\n", omp_get_num_threads());
+      auto label = one_hot_encoded_labels[training_sample_index];
 
-    auto label = one_hot_encoded_labels[training_sample_index];
+      computation_graph->clearComputationGraph();
 
-    computation_graph->clearComputationGraph();
+      // Creates input vertex and adds it to the graph
+      auto input_vertex =
+          std::make_shared<InputVertex>(images[training_sample_index]);
+      computation_graph->addVertex(input_vertex);
 
-    // Creates input vertex and adds it to the graph
-    auto input_vertex =
-        std::make_shared<InputVertex>(images[training_sample_index]);
-    computation_graph->addVertex(input_vertex);
+      std::shared_ptr<Vertex> current_activations = input_vertex;
 
-    std::shared_ptr<Vertex> current_activations = input_vertex;
+      for (uint32_t layer_index = 0; layer_index < NUM_LAYERS; layer_index++) {
+        uint32_t weight_index = (layer_index * 2);
+        uint32_t bias_index = weight_index + 1;
 
-    for (uint32_t layer_index = 0; layer_index < NUM_LAYERS; layer_index++) {
-      uint32_t weight_index = (layer_index * 2);
-      uint32_t bias_index = weight_index + 1;
+        // Creates W_i parameter vertex and adds it to the graph
 
-      // Creates W_i parameter vertex and adds it to the graph
+        auto weight_parameter = std::make_shared<ParameterVertex>(
+            model->getParameterByID(/* param_id = */ weight_index));
 
-      auto weight_parameter = std::make_shared<ParameterVertex>(
-          model->getParameterByID(/* param_id = */ weight_index));
+        computation_graph->addVertex(weight_parameter);
 
-      computation_graph->addVertex(weight_parameter);
+        // Creates b_i parameter vertex and adds it to the graph
+        auto bias_parameter = std::make_shared<ParameterVertex>(
+            model->getParameterByID(/* param_id = */ bias_index));
+        computation_graph->addVertex(bias_parameter);
 
-      // Creates b_i parameter vertex and adds it to the graph
-      auto bias_parameter = std::make_shared<ParameterVertex>(
-          model->getParameterByID(/* param_id = */ bias_index));
-      computation_graph->addVertex(bias_parameter);
+        // Representation of the forward-prop through the ith-layer
+        auto inner_prod_op = std::make_shared<InnerProduct>(
+            /* left_input = */ weight_parameter,
+            /* right_input = */ current_activations);
+        computation_graph->addVertex(inner_prod_op);
 
-      // Representation of the forward-prop through the ith-layer
-      auto inner_prod_op = std::make_shared<InnerProduct>(
-          /* left_input = */ weight_parameter,
-          /* right_input = */ current_activations);
-      computation_graph->addVertex(inner_prod_op);
+        auto summation_op = std::make_shared<Summation>(
+            /* left_input = */ inner_prod_op,
+            /* right_input = */ bias_parameter);
+        computation_graph->addVertex(summation_op);
 
-      auto summation_op = std::make_shared<Summation>(
-          /* left_input = */ inner_prod_op,
-          /* right_input = */ bias_parameter);
-      computation_graph->addVertex(summation_op);
+        if (layer_index < 2) {
+          // std::cout << "[relu]" << std::endl;
+          std::shared_ptr<ReLUActivation> relu_activation(
+              new ReLUActivation(/* incoming_edges = */ {summation_op}));
+          computation_graph->addVertex(relu_activation);
 
-      if (layer_index < 2) {
-        // std::cout << "[relu]" << std::endl;
-        std::shared_ptr<ReLUActivation> relu_activation(
-            new ReLUActivation(/* incoming_edges = */ {summation_op}));
-        computation_graph->addVertex(relu_activation);
+          current_activations = relu_activation;
+        } else {
+          // std::cout << "[softmax]" << std::endl;
+          std::shared_ptr<SoftMaxActivation> softmax(
+              new SoftMaxActivation(/* incoming_edges = */ {summation_op}));
+          computation_graph->addVertex(softmax);
 
-        current_activations = relu_activation;
-      } else {
-        // std::cout << "[softmax]" << std::endl;
-        std::shared_ptr<SoftMaxActivation> softmax(
-            new SoftMaxActivation(/* incoming_edges = */ {summation_op}));
-        computation_graph->addVertex(softmax);
-
-        auto loss_function = std::make_shared<CrossEntropyLoss>(
-            /* input_vertex = */ softmax, /* label = */ label);
-        computation_graph->addVertex(loss_function);
+          auto loss_function = std::make_shared<CrossEntropyLoss>(
+              /* input_vertex = */ softmax, /* label = */ label);
+          computation_graph->addVertex(loss_function);
+        }
       }
+
+      auto [predicted_label, loss] = computation_graph->launchForwardPass();
+
+      losses.push_back(loss);
+      predicted_labels.push_back(predicted_label);
+
+      // std::cout << "[backprop-start]" << std::endl;
+      computation_graph->launchBackwardPass();
+
+      // std::cout << "[parameter-update]" << std::endl;
+
+      gradient_descent_trainer.takeDescentStep();
     }
-
-    auto [predicted_label, loss] = computation_graph->launchForwardPass();
-    std::cout << "(pred, loss) = (" << predicted_label << ", " << loss << ")"
-              << std::endl;
-    losses.push_back(loss);
-    predicted_labels.push_back(predicted_label);
-
-    // std::cout << "[backprop-start]" << std::endl;
-    computation_graph->launchBackwardPass();
-
-    // std::cout << "[parameter-update]" << std::endl;
-
-    gradient_descent_trainer.takeDescentStep();
   }
 
   std::cout << "[END TRAINING]" << std::endl;
@@ -191,6 +199,6 @@ TEST(FortisMLPMnist, TestAccuracyScore) {
   auto accuracy = computeAccuracy(predicted_labels, one_hot_encoded_labels);
 
   ASSERT_GE(accuracy, ACCURACY_THRESHOLD);
-}
+}  // namespace fortis::tests
 
 }  // namespace fortis::tests
