@@ -7,7 +7,7 @@
 #include <cereal/types/polymorphic.hpp>
 #include <cereal/types/vector.hpp>
 #include <src/comp_graph/vertices/vertex.hpp>
-#include <src/parameters.hpp>
+#include <src/params/parameters.hpp>
 #include <memory>
 #include <stdexcept>
 

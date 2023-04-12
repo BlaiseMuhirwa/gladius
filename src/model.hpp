@@ -5,8 +5,8 @@
 #include <cereal/types/memory.hpp>
 #include <cereal/types/variant.hpp>
 #include <cereal/types/vector.hpp>
-#include <src/lookup_parameters.hpp>
-#include <src/parameters.hpp>
+#include <src/params/lookup_parameters.hpp>
+#include <src/params/parameters.hpp>
 #include <memory>
 #include <string>
 #include <variant>

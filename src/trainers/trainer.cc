@@ -1,7 +1,7 @@
 
 #include "trainer.hpp"
 #include <_types/_uint32_t.h>
-#include <src/parameters.hpp>
+#include <src/params/parameters.hpp>
 #include <src/trainers/trainer.hpp>
 #include <omp.h>
 #include <stdexcept>

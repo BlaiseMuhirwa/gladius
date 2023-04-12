@@ -63,6 +63,7 @@ add_subdirectory(src)
 add_subdirectory(tests)
 add_subdirectory(src/comp_graph)
 add_subdirectory(src/trainers)
+add_subdirectory(src/params)
 add_subdirectory(src/comp_graph/vertices)
 
 # Add dependencies

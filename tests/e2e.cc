@@ -8,7 +8,7 @@
 #include <src/comp_graph/vertices/summation.hpp>
 #include <src/comp_graph/vertices/vertex.hpp>
 #include <src/model.hpp>
-#include <src/parameters.hpp>
+#include <src/params/parameters.hpp>
 #include <src/trainers/trainer.hpp>
 #include <src/utils.hpp>
 #include <algorithm>
