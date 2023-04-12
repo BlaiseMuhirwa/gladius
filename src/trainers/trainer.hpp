@@ -14,6 +14,8 @@ class GradientDescentTrainer {
   void takeDescentStep();
   std::shared_ptr<Model> getModel();
 
+  void zeroOutGradients();
+
  private:
   void updateWeightMatrixParameter(
       std::vector<std::vector<float>>& weight_matrix,

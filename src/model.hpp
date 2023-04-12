@@ -31,11 +31,11 @@ class Model {
   Model(const Model&) = delete;
   Model& operator=(const Model&) = delete;
 
-  Parameter& addParameter(uint32_t dimension);
+  // Parameter& addParameter(uint32_t dimension);
 
   // For now we assume that we only have 2 dimensions for the vector
   // TODO(blaise): Relax this assumption
-  Parameter& addParameter(const std::vector<uint32_t>& dimensions);
+  Parameter& addParameter(const std::vector<uint32_t>&& dimensions);
 
   LookupParameter& addLookupParameter(LookupParameter& lookup_parameter);
 

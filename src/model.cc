@@ -1,61 +1,67 @@
 #include <cereal/archives/binary.hpp>
 #include "./utils.hpp"
 #include "parameters.hpp"
+#include <_types/_uint32_t.h>
 #include <src/model.hpp>
 #include <algorithm>
 #include <fstream>
 #include <iterator>
+#include <math.h>
 #include <random>
 #include <stdexcept>
 #include <variant>
 namespace fortis {
 
-static inline float const MEAN = 0.F;
-static inline float const STD_DEV = std::sqrt(2.0F / (794 * 1.0F));
-
-Parameter& Model::addParameter(uint32_t dimension) {
-  std::random_device random_device;
-  std::mt19937 generator(random_device());
-  std::normal_distribution<float> distribution(MEAN, STD_DEV);
-
-  std::vector<float> parameter_vector;
-  std::generate_n(std::back_inserter(parameter_vector), dimension,
-                  [&] { return distribution(generator); });
-
-  std::shared_ptr<Parameter> parameter(new Parameter({parameter_vector}));
-  _parameters.emplace_back(parameter);
-  return *parameter;
-}
-
 // TODO(blaise): Parallelize this implementation with OpenMP
-Parameter& Model::addParameter(const std::vector<uint32_t>& dimensions) {
-  assert(dimensions.size() == 2);
-  auto vector_count = dimensions[0];
-  auto per_vector_dimension = dimensions[1];
+Parameter& Model::addParameter(const std::vector<uint32_t>&& dimensions) {
+  assert(!dimensions.empty());
 
+  std::optional<uint32_t> vector_count = std::nullopt;
+  if (dimensions.size() == 2) {
+    vector_count = dimensions[0];
+  }
+  uint32_t vector_dimension =
+      vector_count.has_value() ? dimensions[1] : dimensions[0];
+
+  if (!vector_count.has_value()) {
+    // Initialize the bias parameter
+    std::vector<float> bias(vector_dimension, 0.F);
+    std::shared_ptr<Parameter> parameter(new Parameter({bias}));
+    _parameters.emplace_back(parameter);
+    return *parameter;
+  }
+  // Initialize the weight parameter
   std::random_device random_device;
   std::mt19937 generator(random_device());
-  std::normal_distribution<float> distribution(MEAN, STD_DEV);
+
+  float xavier_variance = 1.F / (dimensions[1]);
+  float he_variance_initialization = 2 * xavier_variance;
+
+  std::normal_distribution<float> distribution(
+      0.F, sqrt(he_variance_initialization));
 
   std::vector<std::vector<float>> parameter_vectors;
 
-  for (uint32_t vec_index = 0; vec_index < vector_count; vec_index++) {
+  for (uint32_t vec_index = 0; vec_index < vector_count.value(); vec_index++) {
     std::vector<float> current_vector;
-    std::generate_n(std::back_inserter(current_vector), per_vector_dimension,
+    std::generate_n(std::back_inserter(current_vector), dimensions[1],
                     [&] { return distribution(generator); });
 
     parameter_vectors.emplace_back(std::move(current_vector));
   }
+
   std::shared_ptr<Parameter> parameter(
       new Parameter(std::move(parameter_vectors)));
 
-  _parameters.emplace_back(parameter);
+  _parameters.emplace_back(std::move(parameter));
+
   return *parameter;
 }
 
 // TODO(blaise): Refactor the code below to combine getParameterByID and
 // getLookupParameterByID
-std::shared_ptr<Parameter> Model::getParameterByID(uint32_t param_id) {
+std::shared_ptr<parameters::Parameter> Model::getParameterByID(
+    uint32_t param_id) {
   if (param_id >= _parameters.size()) {
     throw std::invalid_argument(
         "Invalid ID encountered while attempting to access a model parameter.");

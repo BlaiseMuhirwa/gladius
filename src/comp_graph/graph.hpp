@@ -21,6 +21,9 @@ class Graph {
 
   inline void clearComputationGraph() {
     if (!_topologically_sorted_vertices.empty()) {
+      for (auto& vertex : _topologically_sorted_vertices) {
+        vertex->zeroOutGradients();
+      }
       _topologically_sorted_vertices.clear();
     }
     if (_loss_value) {

@@ -20,8 +20,8 @@ struct Parameter {
           "Fortis parameter initialization requires a non-empty vector(s).");
     }
     auto total_parameters = getParameterCount();
-    _gradient = std::vector<std::vector<float>>(
-        1, std::vector<float>(total_parameters, 0.F));
+    // _gradient = std::vector<std::vector<float>>(
+    //     1, std::vector<float>(total_parameters, 0.F));
   }
 
   Parameter(const Parameter&) = delete;
@@ -31,22 +31,29 @@ struct Parameter {
 
   std::vector<std::vector<float>> getGradient() const { return _gradient; }
 
+  inline void clearGradient() {
+    if (!_gradient.empty()) {
+      _gradient.clear();
+    }
+  }
+
   /**
    * We delegate all input validations to the parameter vertex, which is purely
    * a wrapper around instances of this class. In this spirit, we need not
    * check again if the gradient is properly formatter or not in this class.
    */
   void updateGradient(std::vector<std::vector<float>>& gradient) {
-    assert(gradient.size() == _gradient.size());
-    assert(_gradient.at(0).size() == gradient.at(0).size());
+    // assert(gradient.size() == _gradient.size());
+    // assert(_gradient.at(0).size() == gradient.at(0).size());
 
-    auto row_count = gradient.size();
-    auto column_count = gradient.at(0).size();
-    for (uint64_t row_index = 0; row_index < row_count; row_index++) {
-      for (uint64_t col_index = 0; col_index < column_count; col_index++) {
-        _gradient[row_index][col_index] += gradient[row_index][col_index];
-      }
-    }
+    // auto row_count = gradient.size();
+    // auto column_count = gradient.at(0).size();
+    // for (uint64_t row_index = 0; row_index < row_count; row_index++) {
+    //   for (uint64_t col_index = 0; col_index < column_count; col_index++) {
+    //     _gradient[row_index][col_index] += gradient[row_index][col_index];
+    //   }
+    // }
+    _gradient = gradient;
   }
 
   /**

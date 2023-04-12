@@ -84,7 +84,7 @@ class Vertex {
    *       to the provided gradient parameter, but there are a few more checks
    *       that should be taken care of first.
   */
-  void inline setUpstreamGradient(std::vector<std::vector<float>>& gradient) {
+  inline void setUpstreamGradient(std::vector<std::vector<float>>& gradient) {
     if (_upstream_gradient.has_value()) {
       throw std::runtime_error("The upstream gradient for vertex " + getName() +
                                " has already been set.");
@@ -93,6 +93,13 @@ class Vertex {
     //  without doing this copy. We can, for instance, initialize the
     //  upstream gradient, and then just add to it
     _upstream_gradient = gradient;
+  }
+
+  inline void zeroOutGradients() {
+    if (_upstream_gradient.has_value()) {
+      _upstream_gradient.value().clear();
+    }
+    _local_gradient.clear();
   }
 
   /**

@@ -1,7 +1,8 @@
 
+#include "trainer.hpp"
 #include <_types/_uint32_t.h>
 #include <src/parameters.hpp>
-#include <src/trainer.hpp>
+#include <src/trainers/trainer.hpp>
 #include <omp.h>
 #include <stdexcept>
 
@@ -50,6 +51,14 @@ void GradientDescentTrainer::takeDescentStep() {
   }
 }
 
+void GradientDescentTrainer::zeroOutGradients() {
+  auto parameters = _model->getParameters();
+  for (auto& variant_parameter : parameters) {
+    auto parameter = std::get<std::shared_ptr<Parameter>>(variant_parameter);
+    parameter->clearGradient();
+  }
+}
+
 void GradientDescentTrainer::updateWeightMatrixParameter(
     std::vector<std::vector<float>>& weight_matrix,
     std::vector<std::vector<float>>& jacobian) const {
@@ -59,12 +68,12 @@ void GradientDescentTrainer::updateWeightMatrixParameter(
   auto weight_matrix_rows = weight_matrix.size();
   auto weight_matrix_cols = weight_matrix.at(0).size();
 
-#pragma omp parallel for default(none)                                      \
-    shared(weight_matrix_rows, weight_matrix_cols, weight_matrix, jacobian, \
-           _learning_rate)
-  for (uint64_t row_index = 0; row_index < weight_matrix_rows; row_index++) {
-    for (uint64_t col_index = 0; col_index < weight_matrix_cols; col_index++) {
-      uint64_t jacobian_index = (row_index * weight_matrix_cols) + col_index;
+  // #pragma omp parallel for default(none)                                      \
+//     shared(weight_matrix_rows, weight_matrix_cols, weight_matrix, jacobian, \
+//            _learning_rate)
+  for (uint32_t row_index = 0; row_index < weight_matrix_rows; row_index++) {
+    for (uint32_t col_index = 0; col_index < weight_matrix_cols; col_index++) {
+      uint32_t jacobian_index = (row_index * weight_matrix_cols) + col_index;
       weight_matrix[row_index][col_index] -=
           _learning_rate * jacobian[0][jacobian_index];
     }
@@ -74,8 +83,8 @@ void GradientDescentTrainer::updateBiasVectorParameter(
     std::vector<float>& bias_vector, std::vector<float>& gradient) const {
   assert(bias_vector.size() == gradient.size());
 
-#pragma omp parallel for default(none) \
-    shared(_learning_rate, gradient, bias_vector)
+  // #pragma omp parallel for default(none) \
+//     shared(_learning_rate, gradient, bias_vector)
   for (uint32_t index = 0; index < bias_vector.size(); index++) {
     bias_vector[index] -= _learning_rate * gradient[index];
   }
