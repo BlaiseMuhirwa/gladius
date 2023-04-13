@@ -1,6 +1,6 @@
 #include <cereal/archives/binary.hpp>
-#include "./utils.hpp"
-#include "parameters.hpp"
+#include <src/utils.hpp>
+#include <src/params/parameters.hpp>
 #include <_types/_uint32_t.h>
 #include <src/model.hpp>
 #include <algorithm>

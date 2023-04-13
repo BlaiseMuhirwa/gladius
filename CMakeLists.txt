@@ -45,6 +45,8 @@ else()
   message(STATUS "OpenMP directory: ${OpenMP_CXX_INCLUDE_DIR}")
 endif(NOT OpenMP_FOUND)
 
+option(BUILD_TESTS "Builds unit and integration tests" OFF)
+
 # set compiler flags TODO: Add -lbenchmark compiler flag and the corresponding
 # benchmark submodule https://github.com/google/benchmark
 set(CMAKE_CXX_FLAGS " -std=c++20 -fopenmp -O3")
@@ -53,14 +55,19 @@ include_directories(".")
 include_directories(${CMAKE_BINARY_DIR})
 
 # Where to find header files
-include_directories(src/comp_graph)
-include_directories(src/comp_graph/vertices)
-include_directories(dependencies)
-include_directories(src)
+# include_directories(src/comp_graph)
+# include_directories(src/comp_graph/vertices)
+# include_directories(dependencies)
+# include_directories(src)
 
 # This requires having a CMakeLists.txt file in the subdirectory
 add_subdirectory(src)
-add_subdirectory(tests)
+
+if (BUILD_TESTS)
+  add_subdirectory(tests)
+  message(STATUS "Building unit and integration tests")
+endif()
+
 add_subdirectory(src/comp_graph)
 add_subdirectory(src/trainers)
 add_subdirectory(src/params)

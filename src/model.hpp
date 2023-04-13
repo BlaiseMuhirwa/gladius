@@ -52,13 +52,13 @@ class Model {
 
   void updateParameterGradients();
 
-  void save(const std::string& file_name) const {
-    std::ofstream file_stream =
-        fortis::utils::handle_ofstream(file_name, std::ios::binary);
-    cereal::BinaryOutputArchive output_archive(file_stream);
+  // void save(const std::string& file_name) const {
+  //   std::ofstream file_stream =
+  //       fortis::utils::handle_ofstream(file_name, std::ios::binary);
+  //   cereal::BinaryOutputArchive output_archive(file_stream);
 
-    output_archive(*this);
-  }
+  //   output_archive(*this);
+  // }
   // static std::shared_ptr<Model> load(const std::string &file_name) {
   //   std::ifstream file_stream =
   //       fortis::handle_ifstream(file_name, std::ios::binary);
@@ -78,11 +78,11 @@ class Model {
                            std::shared_ptr<LookupParameter>>>
       _parameters;
 
-  friend class cereal::access;
-  template <typename Archive>
-  void serialize(Archive& archive) {
-    archive(_parameters);
-  }
+  // friend class cereal::access;
+  // template <typename Archive>
+  // void serialize(Archive& archive) {
+  //   archive(_parameters);
+  // }
 };
 
 }  // namespace fortis

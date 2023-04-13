@@ -116,9 +116,7 @@ TEST(FortisMLPMnist, TestAccuracyScore) {
 
   for (uint32_t training_sample_index = 0;
        training_sample_index < images.size(); training_sample_index++) {
-#ifdef _OPENMP
-    printf("threads: %d\n", omp_get_num_threads());
-#endif
+
     auto label = one_hot_encoded_labels[training_sample_index];
 
     computation_graph->clearComputationGraph();

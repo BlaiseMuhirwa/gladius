@@ -38,6 +38,7 @@ Fortis's architecture consists of the following components:
 ### Getting Started
 Before cloning the repository, make sure you have the following installed on your
 machine:
+- cmake (version >= 3.18)
 - cmake-format 
 - clang-format 
 
@@ -47,8 +48,13 @@ and [benchmark](https://github.com/google/benchmark). Then, build the library as
 
 ```shell
 $ git clone https://github.com/BlaiseMuhirwa/fortis.git --recurse-submodules
-$ ./build.sh 
 ```
+To build all unit and integration tests, you can pass an optional `tests` argument as follows
+
+```shell
+$ ./build.sh tests
+```
+
 
 Note: We currently only support Macs with x86-64 architectures. Support for more architectures will be added progressively. 
 
