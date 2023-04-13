@@ -54,16 +54,16 @@ set(CMAKE_CXX_FLAGS " -std=c++20 -fopenmp -O3")
 include_directories(".")
 include_directories(${CMAKE_BINARY_DIR})
 
-# Where to find header files
-# include_directories(src/comp_graph)
-# include_directories(src/comp_graph/vertices)
-# include_directories(dependencies)
-# include_directories(src)
+# Add dependencies
+set(SKIP_PERFORMANCE_COMPARISON ON)
+add_subdirectory(dependencies/cereal EXCLUDE_FROM_ALL)
+
 
 # This requires having a CMakeLists.txt file in the subdirectory
 add_subdirectory(src)
 
 if (BUILD_TESTS)
+  add_subdirectory(dependencies/googletest EXCLUDE_FROM_ALL)
   add_subdirectory(tests)
   message(STATUS "Building unit and integration tests")
 endif()
@@ -73,14 +73,6 @@ add_subdirectory(src/trainers)
 add_subdirectory(src/params)
 add_subdirectory(src/comp_graph/vertices)
 
-# Add dependencies
-set(SKIP_PERFORMANCE_COMPARISON ON)
-add_subdirectory(dependencies/cereal EXCLUDE_FROM_ALL)
-add_subdirectory(dependencies/googletest EXCLUDE_FROM_ALL)
-
-# include(FetchContent) FetchContent_Declare( googletest URL
-# https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
-# )
 
 set(FORTIS_SOURCES
     ${PROJECT_SOURCE_DIR}/src/trainers/trainer.cc

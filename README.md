@@ -55,6 +55,7 @@ To build all unit and integration tests, you can pass an optional `tests` argume
 $ ./build.sh tests
 ```
 
+If you do not provide the `tests` argument, `cmake` will only build Fortis static library. 
 
 Note: We currently only support Macs with x86-64 architectures. Support for more architectures will be added progressively. 
 
