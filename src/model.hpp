@@ -27,6 +27,8 @@ class Model {
   /* We want to only have one instance of a model running in the background,
    * which is why we need to delete the copy constructor and copy assignment
    * operator
+   * TODO: Have the model hold an optional graph object and define Model::operator()
+   * which will launch the forward pass with the given input sample. 
    */
   Model(const Model&) = delete;
   Model& operator=(const Model&) = delete;

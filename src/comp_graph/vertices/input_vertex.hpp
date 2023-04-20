@@ -23,7 +23,10 @@ class InputVertex final : public Vertex,
   InputVertex& operator=(const InputVertex&) = delete;
 
   void forward() override {}
-  void backward() override {}
+  void backward(std::optional<std::vector<float>>& upstream_grad) override {
+    (void)upstream_grad;
+    // std::cout << "[input-vertex-backward]" << std::endl;
+  }
 
   inline std::string getName() final { return "Input"; }
 

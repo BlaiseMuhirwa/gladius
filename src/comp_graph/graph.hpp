@@ -21,9 +21,9 @@ class Graph {
 
   inline void clearComputationGraph() {
     if (!_topologically_sorted_vertices.empty()) {
-      for (auto& vertex : _topologically_sorted_vertices) {
-        vertex->zeroOutGradients();
-      }
+      // for (auto& vertex : _topologically_sorted_vertices) {
+      //   vertex->zeroOutGradients();
+      // }
       _topologically_sorted_vertices.clear();
     }
     if (_loss_value) {
@@ -33,6 +33,13 @@ class Graph {
 
   uint32_t getVerticesCount() const {
     return _topologically_sorted_vertices.size();
+  }
+
+  VertexPointer getVertexAtIndex(uint32_t vertex_id) {
+    if (vertex_id < getVerticesCount()) {
+      return _topologically_sorted_vertices[vertex_id];
+    }
+    return nullptr;
   }
 
   void addVertex(VertexPointer vertex) {
@@ -66,18 +73,19 @@ class Graph {
     return {prediction, _loss_value.value()};
   }
 
-  void launchBackwardPass() {
-    if (!_loss_value.has_value()) {
-      throw std::runtime_error(
-          "You must compute the value of the loss function first.");
-    }
-    auto graph_size = _topologically_sorted_vertices.size();
+  // void launchBackwardPass() {
+  //   if (!_loss_value.has_value()) {
+  //     throw std::runtime_error(
+  //         "You must compute the value of the loss function first.");
+  //   }
+  //   auto graph_size = _topologically_sorted_vertices.size();
 
-    for (int vertex_index = graph_size - 1; vertex_index >= 0; vertex_index--) {
-      auto vertex = _topologically_sorted_vertices[vertex_index];
-      vertex->backward();
-    }
-  }
+  //   for (int vertex_index = graph_size - 1; vertex_index >= 0;
+  //   vertex_index--) {
+  //     auto vertex = _topologically_sorted_vertices[vertex_index];
+  //     vertex->backward();
+  //   }
+  // }
 
  private:
   std::vector<VertexPointer> _topologically_sorted_vertices;

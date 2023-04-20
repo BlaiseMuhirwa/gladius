@@ -13,7 +13,6 @@
 #include <cassert>
 #include <cstddef>
 #include <format>
-#include <math.h>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -34,6 +33,8 @@ class SoftMaxActivation final
           "input. Received " +
           std::to_string(incoming_edges.size()) + " vectors.");
     }
+    auto output_shape = getOutputShape();
+    _local_gradient = std::vector<float>(output_shape.second, 0.F);
   }
   SoftMaxActivation(const SoftMaxActivation&) = delete;
   SoftMaxActivation& operator=(const SoftMaxActivation&) = delete;
@@ -70,25 +71,21 @@ class SoftMaxActivation final
    * then use the chain rule to compute the partials of the loss function w.r.t
    * the logits
    */
-  void backward() final {
-    if (!_upstream_gradient.has_value()) {
+  void backward(std::optional<std::vector<float>>& upstream_grad) final {
+    if (!upstream_grad.has_value()) {
       throw std::runtime_error(
           "Cannot propagate the gradient backward without "
           "setting the upstream gradient first.");
     }
-    // std::cout << "[upstream grad shape]: (" <<
-    // _upstream_gradient.value().size()
-    //           << ", " << _upstream_gradient.value().at(0).size() << ")"
-    //           << std::endl;
-    // std::cout << "[softmax-output-size]: " << _output.size() << std::endl;
-    assert(_upstream_gradient.value().size() == 1);
-    assert(_upstream_gradient.value().at(0).size() == _output.size());
+
+    assert(upstream_grad.value().size() == _output.size());
     assert(!_output.empty());
+
     // We will assume that the softmax operation is only connected to
     // one loss function so that backpropagation through this vertex
     // only happens once. As the types of supported models increase,
     // this requirement can be relaxed.
-    assert(_local_gradient.empty());
+    assert(_local_gradient.has_value());
 
     auto num_dimensions = _logits.size();
     std::vector<std::vector<float>> jacobian_matrix(
@@ -105,18 +102,19 @@ class SoftMaxActivation final
         }
       }
     }
-    // std::cout << "[finished-jacobian-computation]" << std::endl;
-    _local_gradient = std::vector<std::vector<float>>(
-        1, std::vector<float>(num_dimensions, 0.F));
 
     for (uint32_t col_index = 0; col_index < num_dimensions; col_index++) {
-      _local_gradient[0][col_index] = fortis::utils::innerProduct(
-          /* vector = */ _upstream_gradient.value().at(0),
+      (*_local_gradient)[col_index] = fortis::utils::innerProduct(  // NOLINT
+          /* vector = */ upstream_grad.value(),
           /* matrix = */ jacobian_matrix,
           /* col_index = */ col_index);
     }
+
+    // std::cout << "[softmax-backward]" << std::endl;
+
     auto previous_vertex = _incoming_edges.at(0);
-    previous_vertex->setUpstreamGradient(/* gradient = */ _local_gradient);
+    previous_vertex->backward(/* upstream_grad = */ _local_gradient);
+
     // std::cout << "[softmax-finished upstream grads updates]" << std::endl;
   }
 
@@ -172,7 +170,7 @@ class SoftMaxActivation final
   template <typename Archive>
   void serialize(Archive& archive) {
     archive(cereal::base_class<Vertex>(this), _output, _local_gradient,
-            _upstream_gradient, _incoming_edges);
+            _incoming_edges);
   }
 };
 
@@ -188,6 +186,8 @@ class ReLUActivation final
           "input. Received " +
           std::to_string(_incoming_edges.size()) + " vectors.");
     }
+    auto output_shape = getOutputShape();
+    _local_gradient = std::vector<float>(output_shape.second, 0.F);
   }
 
   ReLUActivation(const ReLUActivation&) = delete;
@@ -206,15 +206,15 @@ class ReLUActivation final
    * TODO: Computing the Jacobian matrix is completely unnecessary.
    *       Remove it.
    */
-  void backward() final {
-    if (!_upstream_gradient.has_value()) {
+  void backward(std::optional<std::vector<float>>& upstream_grad) final {
+    if (!upstream_grad.has_value()) {
       throw std::runtime_error(
           "Cannot propagate the gradient backward without "
           "setting the upstream gradient first.");
     }
     assert(!_output.empty());
-    assert(_upstream_gradient.value().size() == 1);
-    assert(_upstream_gradient.value().at(0).size() == _output.size());
+    assert(_local_gradient.has_value());
+    assert(upstream_grad.value().size() == _output.size());
 
     auto dimensions = _output.size();
     if (!_jacobian.has_value()) {
@@ -227,19 +227,20 @@ class ReLUActivation final
             input_vector.at(0).at(index) > 0.F ? 1.0 : 0.F;
       }
     }
-    _local_gradient =
-        std::vector<std::vector<float>>(1, std::vector<float>(dimensions, 0.F));
 
     // This is not quite correct since ReLU is not differentiable at 0,
     // but we will just set it to 0 at 0
     for (uint32_t col_index = 0; col_index < dimensions; col_index++) {
-      _local_gradient[0][col_index] += fortis::utils::innerProduct(
-          /* vector = */ _upstream_gradient.value().at(0),
+      (*_local_gradient)[col_index] += fortis::utils::innerProduct(
+          /* vector = */ upstream_grad.value(),
           /* matrix = */ _jacobian.value(),
           /* col_index = */ col_index);
     }
+
+    // std::cout << "[relu-backward]" << std::endl;
+
     auto previous_vertex = _incoming_edges.at(0);
-    previous_vertex->setUpstreamGradient(/* gradient = */ _local_gradient);
+    previous_vertex->backward(/* upstream_grad = */ _local_gradient);
   }
 
   inline std::string getName() final { return "ReLU"; }
@@ -272,7 +273,7 @@ class ReLUActivation final
   template <typename Archive>
   void serialize(Archive& archive) {
     archive(cereal::base_class<Vertex>(this), _incoming_edges, _jacobian,
-            _local_gradient, _upstream_gradient, _output);
+            _local_gradient, _output);
   }
 };
 
@@ -294,6 +295,8 @@ class TanHActivation final
           "input. Received " +
           std::to_string(_incoming_edges.size()) + " vectors.");
     }
+    auto output_shape = getOutputShape();
+    _local_gradient = std::vector<float>(output_shape.second, 0.F);
   }
 
   TanHActivation(const TanHActivation&) = delete;
@@ -313,14 +316,13 @@ class TanHActivation final
    * simplifying, we get that d(tanh(x))/dx = 1 - [tanh(x)^2]
    *
    */
-  void backward() final {
-    if (!_upstream_gradient.has_value()) {
+  void backward(std::optional<std::vector<float>>& upstream_grad) final {
+    if (!upstream_grad.has_value()) {
       throw std::runtime_error(
           "Cannot propagate the gradient backward without "
           "setting the upstream gradient first.");
     }
-    assert(_upstream_gradient.value().size() == 1);
-    assert(_upstream_gradient.value().at(0).size() == _output.size());
+    assert(upstream_grad.value().size() == _output.size());
     assert(!_output.empty());
 
     auto dimensions = _output.size();
@@ -336,14 +338,14 @@ class TanHActivation final
       }
     }
     for (uint32_t col_index = 0; col_index < dimensions; col_index++) {
-      _local_gradient[0][col_index] += fortis::utils::innerProduct(
-          /* vector = */ _upstream_gradient.value().at(0),
+      (*_local_gradient)[col_index] += fortis::utils::innerProduct(  // NOLINT
+          /* vector = */ upstream_grad.value(),
           /* matrix = */ _jacobian.value(),
           /* col_index = */ col_index);
     }
 
     auto previous_vertex = _incoming_edges.at(0);
-    previous_vertex->setUpstreamGradient(/* gradient = */ _local_gradient);
+    previous_vertex->backward(/* upstream_grad = */ _local_gradient);
   }
 
   inline std::string getName() final { return "TanH"; }
@@ -375,7 +377,7 @@ class TanHActivation final
   template <typename Archive>
   void serialize(Archive& archive) {
     archive(cereal::base_class<Vertex>(this), _incoming_edges, _jacobian,
-            _local_gradient, _upstream_gradient, _output);
+            _local_gradient, _output);
   }
 };
 

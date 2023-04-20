@@ -7,7 +7,6 @@
 #include <cereal/types/polymorphic.hpp>
 #include <cereal/types/vector.hpp>
 #include <_types/_uint32_t.h>
-#include <src/comp_graph/vertices/activ_functions.hpp>
 #include <src/comp_graph/vertices/vertex.hpp>
 #include <algorithm>
 #include <memory>
@@ -57,6 +56,9 @@ class CrossEntropyLoss final
           std::to_string(probabilities_vector_shape.second) +
           " while the label vector has size " + std::to_string(_label.size()));
     }
+
+    _local_gradient =
+        std::vector<float>(probabilities_vector_shape.second, 0.F);
   }
 
   void forward() final {
@@ -75,22 +77,22 @@ class CrossEntropyLoss final
    * DCE = [0, 0, ..., (-1/P_j), ..., 0]
    *
    */
-  void backward() final {
-    assert(!_upstream_gradient.has_value());
-    assert(_local_gradient.empty());
+  void backward(std::optional<std::vector<float>>& upstream_grad) final {
+    assert(!upstream_grad.has_value());
+    assert(_local_gradient.has_value());
+
     auto output_shape = _input->getOutputShape();
     auto probabilities = _input->getOutput().at(0);
-    _local_gradient = std::vector<std::vector<float>>(
-        1, std::vector<float>(output_shape.second, 0.0));
 
     uint32_t index_with_positive_label = findIndexWithPositiveLabel(_label);
 
     // derivative of -log(P_j) where j is the index
     auto derivative_at_index =
         -(1.F / probabilities.at(index_with_positive_label));
-    _local_gradient[0][index_with_positive_label] = derivative_at_index;
+    (*_local_gradient)[index_with_positive_label] = derivative_at_index;
 
-    _input->setUpstreamGradient(/* gradient = */ _local_gradient);
+    // std::cout << "[loss-backward]" << std::endl;
+    _input->backward(/* upstream_grad = */ _local_gradient);
   }
 
   inline std::string getName() final { return "CrossEntropyLoss"; }
@@ -129,12 +131,12 @@ class CrossEntropyLoss final
     auto output_size = _label.size();
     auto probabilities = _input->getOutput().at(0);
     for (uint32_t prob_index = 0; prob_index < output_size; prob_index++) {
-      std::cout << "[softmax-normalized logit] " << probabilities[prob_index]
-                << std::endl;
+      // std::cout << "[softmax-normalized logit] " << probabilities[prob_index]
+      //           << std::endl;
       (*_loss) += _label[prob_index] * log(probabilities[prob_index]);
     }
     (*_loss) = -(*_loss);
-    std::cout << "[computed loss]: " << _loss.value() << std::endl;
+    // std::cout << "[computed loss]: " << _loss.value() << std::endl;
     return shared_from_this();
   }
 

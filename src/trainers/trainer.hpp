@@ -19,7 +19,7 @@ class GradientDescentTrainer {
  private:
   void updateWeightMatrixParameter(
       std::vector<std::vector<float>>& weight_matrix,
-      std::vector<std::vector<float>>& jacobian) const;
+      std::vector<float>& jacobian) const;
   void updateBiasVectorParameter(std::vector<float>& bias_vector,
                                  std::vector<float>& gradient) const;
 

@@ -3,6 +3,7 @@
 #include <cereal/access.hpp>
 #include <cereal/types/optional.hpp>
 #include <cereal/types/vector.hpp>
+#include <cassert>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -33,8 +34,7 @@ class Vertex {
   Vertex() = default;
   /* Move constructor */
   Vertex(Vertex&& other) noexcept
-      : _upstream_gradient(std::move(other._upstream_gradient)),
-        _local_gradient(std::move(other._local_gradient)),
+      : _local_gradient(std::move(other._local_gradient)),
         _output(std::move(other._output)) {}
 
   /* Move assignment operator */
@@ -55,7 +55,7 @@ class Vertex {
    * of the loss function with respect to the given parameter
    * via the chain rule.
    */
-  virtual void backward() = 0;
+  virtual void backward(std::optional<std::vector<float>>& upstream_grad) = 0;
 
   /**
    * While this method is indeed part of the mechanics of the backward
@@ -84,22 +84,23 @@ class Vertex {
    *       to the provided gradient parameter, but there are a few more checks
    *       that should be taken care of first.
   */
-  inline void setUpstreamGradient(std::vector<std::vector<float>>& gradient) {
-    if (_upstream_gradient.has_value()) {
-      throw std::runtime_error("The upstream gradient for vertex " + getName() +
-                               " has already been set.");
-    }
-    // TODO(blaise): Come up with a better way to update the gradient
-    //  without doing this copy. We can, for instance, initialize the
-    //  upstream gradient, and then just add to it
-    _upstream_gradient = gradient;
-  }
+  // inline void setUpstreamGradient(std::vector<std::vector<float>>& gradient)
+  // {
+  //   if (_upstream_gradient.has_value()) {
+  //     throw std::runtime_error("The upstream gradient for vertex " +
+  //     getName() +
+  //                              " has already been set.");
+  //   }
+  //   // TODO(blaise): Come up with a better way to update the gradient
+  //   //  without doing this copy. We can, for instance, initialize the
+  //   //  upstream gradient, and then just add to it
+  //   _upstream_gradient = gradient;
+  // }
 
   inline void zeroOutGradients() {
-    if (_upstream_gradient.has_value()) {
-      _upstream_gradient.value().clear();
+    if (_local_gradient.has_value()) {
+      _local_gradient = std::nullopt;
     }
-    _local_gradient.clear();
   }
 
   /**
@@ -120,9 +121,9 @@ class Vertex {
    * Returns the gradient of the loss function with respect to
    * the operation computed by the vertex.
    */
-  virtual inline std::vector<std::vector<float>> getGradient() const {
-    assert(!_local_gradient.empty());
-    return _local_gradient;
+  virtual inline std::vector<float> getGradient() const {
+    assert(_local_gradient.has_value());
+    return _local_gradient.value();
   }
 
   /**
@@ -139,18 +140,14 @@ class Vertex {
    */
   virtual std::shared_ptr<Vertex> applyOperation() = 0;
 
-  // This is an optional because we want the upstream gradient to be null
-  // for any specific vertex until the backward computation arrives
-  // at it.
-  std::optional<std::vector<std::vector<float>>> _upstream_gradient;
-  std::vector<std::vector<float>> _local_gradient;
+  std::optional<std::vector<float>> _local_gradient;
   std::vector<float> _output;
 
  private:
   friend class cereal::access;
   template <typename Archive>
   void serialize(Archive& archive) {
-    archive(_upstream_gradient, _local_gradient);
+    archive(_local_gradient);
   }
 };
 using VertexPointer = std::shared_ptr<Vertex>;

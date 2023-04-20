@@ -1,8 +1,8 @@
 #include <cereal/archives/binary.hpp>
-#include <src/utils.hpp>
-#include <src/params/parameters.hpp>
 #include <_types/_uint32_t.h>
 #include <src/model.hpp>
+#include <src/params/parameters.hpp>
+#include <src/utils.hpp>
 #include <algorithm>
 #include <fstream>
 #include <iterator>

@@ -24,7 +24,10 @@ class InnerProduct final : public Vertex,
  public:
   InnerProduct(VertexPointer left_input, VertexPointer right_input)
       : _left_input(std::move(left_input)),
-        _right_input(std::move(right_input)) {
+        _right_input(std::move(right_input)),
+        _local_right_gradient(std::nullopt),
+        _local_left_gradient(std::nullopt),
+        _left_input_jacobian(std::nullopt) {
     auto left_input_shape = _left_input->getOutputShape();
     auto right_input_shape = _right_input->getOutputShape();
 
@@ -44,27 +47,34 @@ class InnerProduct final : public Vertex,
       _output_length = left_input_shape.second;
     }
     // std::cout << "[mult] -- allocating size " << _output_length << std::endl;
-    _output.reserve(_output_length);
+
+    _output = std::vector<float>(_output_length, 0.F);
+
+    _local_left_gradient = std::vector<float>(
+        left_input_shape.first * left_input_shape.second, 0.F);
+
+    _local_right_gradient = std::vector<float>(
+        right_input_shape.first * right_input_shape.second, 0.F);
   }
 
-  void forward() final {
-    assert(_output.empty());
-    applyOperation();
-  }
+  void forward() final { applyOperation(); }
 
-  void backward() final {
-    if (!_upstream_gradient.has_value()) {
+  void backward(std::optional<std::vector<float>>& upstream_grad) final {
+    if (!upstream_grad.has_value()) {
       throw std::runtime_error(
           "Cannot propagate the gradient backward without "
           "setting the upstream gradient first.");
     }
     assert(!_output.empty());
-    assert(_upstream_gradient.value().size() == 1);
-    assert(_upstream_gradient.value().at(0).size() == _output.size());
 
-    backwardLeftInputImpl();
-    backwardRightInputImpl();
-    // std::cout << "[inner-prod-finished upstream grads updates]" << std::endl;
+    // Memory for the gradients ought to have been allocated during the forward
+    // pass
+    assert(_local_left_gradient.has_value());
+    assert(_local_right_gradient.has_value());
+    assert(upstream_grad.value().size() == _output.size());
+
+    backwardLeftInputImpl(/* upstream_grad = */ upstream_grad.value());
+    backwardRightInputImpl(/* upstream_grad = */ upstream_grad.value());
   }
 
   inline std::string getName() final { return "InnerProduct"; }
@@ -81,22 +91,24 @@ class InnerProduct final : public Vertex,
    * Jacobian of the multiplication operation w.r.t the right input
    * is precisely the left input.
    */
-  void backwardRightInputImpl() {
-    auto [row_size, col_size] = _right_input->getOutputShape();
-    // Checks if this is the first time backpropagating through this vertex
-    // On the first pass we populate the partial derivatives
-    if (_local_right_gradient.empty()) {
-      _local_right_gradient =
-          std::vector<std::vector<float>>(1, std::vector<float>(col_size, 0.F));
-    }
-    auto num_columns = _left_input->getOutputShape().second;
-    for (uint32_t col_index = 0; col_index < num_columns; col_index++) {
-      _local_right_gradient[0][col_index] += fortis::utils::innerProduct(
-          /* vector = */ _upstream_gradient.value().at(0),  // NOLINT
-          /* matrix = */ _left_input->getOutput(), /* col_index = */ col_index);
-    }
+  void backwardRightInputImpl(std::vector<float>& upstream_grad) {
+    auto left_input_shape = _left_input->getOutputShape();
+    assert(upstream_grad.size() == left_input_shape.first);
 
-    _right_input->setUpstreamGradient(/* gradient = */ _local_right_gradient);
+    auto [num_rows, num_columns] = _right_input->getOutputShape();
+
+    // std::cout << "\t[inner-prod-local-grad-update(right)]" << std::endl;
+
+    for (uint32_t col_index = 0; col_index < num_columns; col_index++) {
+      (*_local_right_gradient)[col_index] +=  // NOLINT
+          fortis::utils::innerProduct(        // NOLINT
+              /* vector = */ upstream_grad,   // NOLINT
+              /* matrix = */ _left_input->getOutput(),
+              /* col_index = */ col_index);
+    }
+    // std::cout << "[inner-prod-backward-right-input]" << std::endl;
+
+    _right_input->backward(/* upstream_grad = */ _local_right_gradient);
   }
   /**
    * To get the dimensions of the Jacobian matrix for the local
@@ -106,42 +118,54 @@ class InnerProduct final : public Vertex,
    * Let \Phi be the multiplication operation. Then, it follows that the
    * Jacobian of \Phi w.r.t W has shape (mx(mn)).
    */
-  void backwardLeftInputImpl() {
-    auto right_input_size = _right_input->getOutputShape().second;
-    auto num_rows = _left_input->getOutputShape().first;
-    auto num_columns = num_rows * right_input_size;
+  void backwardLeftInputImpl(std::vector<float>& upstream_grad) {
+    auto left_input_shape = _left_input->getOutputShape();
+    assert(upstream_grad.size() == left_input_shape.first);
 
-    std::vector<std::vector<float>> jacobian_matrix(
-        num_rows, std::vector<float>(num_columns, 0.F));
+    uint32_t total_jacobian_columns =
+        left_input_shape.first * left_input_shape.second;
+    // std::cout << "\t[inner-prod-starting(left)]" << std::endl;
 
-    for (uint32_t row_index = 0; row_index < num_rows; row_index++) {
-      for (uint32_t col_index = 0; col_index < num_columns; col_index++) {
-        uint32_t weight_matrix_row_index = col_index / num_columns;
-        uint32_t weight_matrix_col_index = col_index % right_input_size;
+    if (!_left_input_jacobian.has_value()) {
+      // std::cout << "\t[inner-prod-computing jacobian(left)]" << std::endl;
 
-        if (row_index == weight_matrix_row_index) {
-          jacobian_matrix[row_index][col_index] =
-              _right_input->getOutput().at(0).at(weight_matrix_col_index);
+      _left_input_jacobian = std::vector<std::vector<float>>(
+          left_input_shape.first,
+          std::vector<float>(total_jacobian_columns, 0.F));
+
+#pragma omp parallel for default(none)                                     \
+    shared(left_input_shape, total_jacobian_columns, _left_input_jacobian, \
+           _right_input)
+      for (uint32_t row_index = 0; row_index < left_input_shape.first;
+           row_index++) {
+        for (uint32_t col_index = 0; col_index < total_jacobian_columns;
+             col_index++) {
+          uint32_t weight_matrix_col_index =
+              col_index % left_input_shape.second;
+          uint32_t weight_matrix_row_index =
+              (col_index - weight_matrix_col_index) / left_input_shape.second;
+
+          if (row_index == weight_matrix_row_index) {
+            (*_left_input_jacobian)[row_index][col_index] =
+                _right_input->getOutput().at(0).at(weight_matrix_col_index);
+          }
         }
       }
     }
+    // std::cout << "\t[inner-prod-local-grad-update(left)]" << std::endl;
 
-    auto [row_size, col_size] = _left_input->getOutputShape();
-    // Checks if this is the first time backpropagating through this vertex
-    // On the first pass we populate the partial derivatives
-    if (_local_left_gradient.empty()) {
-      _local_left_gradient = std::vector<std::vector<float>>(
-          1, std::vector<float>(row_size * col_size, 0.F));
-    }
-
-    for (uint32_t col_index = 0; col_index < (row_size * col_size);
+    for (uint32_t col_index = 0; col_index < total_jacobian_columns;
          col_index++) {
-      _local_left_gradient[0][col_index] += fortis::utils::innerProduct(
-          /* vector = */ _upstream_gradient.value().at(0),  // NOLINT
-          /* matrix = */ jacobian_matrix,
-          /* col_index = */ col_index);
+      (*_local_left_gradient)[col_index] +=  // NOLINT
+          fortis::utils::innerProduct(       // NOLINT
+              /* vector = */ upstream_grad,
+              /* matrix = */ _left_input_jacobian.value(),
+              /* col_index = */ col_index);
     }
-    _left_input->setUpstreamGradient(/* gradient = */ _local_left_gradient);
+
+    // std::cout << "[inner-prod-backward-left-input]" << std::endl;
+
+    _left_input->backward(/* upstream_grad = */ _local_left_gradient);
   }
 
   std::shared_ptr<Vertex> applyOperation() final {
@@ -153,14 +177,17 @@ class InnerProduct final : public Vertex,
       auto inner_product = fortis::utils::innerProduct(
           /*first = */ current_row, /* second = */ right_output_vector);
 
-      _output.emplace_back(inner_product);
+      _output[row_index] = inner_product;
     }
     return shared_from_this();
   }
   VertexPointer _left_input;
   VertexPointer _right_input;
-  std::vector<std::vector<float>> _local_left_gradient;
-  std::vector<std::vector<float>> _local_right_gradient;
+  std::optional<std::vector<float>> _local_right_gradient;
+  std::optional<std::vector<float>> _local_left_gradient;
+
+  std::optional<std::vector<std::vector<float>>> _left_input_jacobian;
+
   uint32_t _output_length;
 
   InnerProduct() = default;
@@ -170,7 +197,7 @@ class InnerProduct final : public Vertex,
   void serialize(Archive& archive) {
     archive(cereal::base_class<Vertex>(this), _left_input, _right_input,
             _output, _local_left_gradient, _local_right_gradient,
-            _upstream_gradient, _output_length);
+            _left_input_jacobian, _output_length);
   }
 };
 

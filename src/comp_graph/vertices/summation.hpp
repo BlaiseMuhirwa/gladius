@@ -53,37 +53,22 @@ class Summation final : public Vertex,
    * for two input vectors x and y. Then, we observe that the Jacobian
    * of \phi w.r.t either x or y is the identity matrix. Thus, the local
    * gradient is the identity so that the upstream gradient parameter
-   * is passed backward to either input vertex for downstream gradients
+   * is passed backward to both input vertices for downstream gradient
    * computations.
    */
-  void backward() final {
-    if (!_upstream_gradient.has_value()) {
+  void backward(std::optional<std::vector<float>>& upstream_grad) final {
+    if (!upstream_grad.has_value()) {
       throw std::runtime_error(
           "Cannot propagate the gradient backward without "
           "setting the upstream gradient first.");
     }
     assert(!_output.empty());
-    assert(_upstream_gradient.value().size() == 1);
-    assert(_upstream_gradient.value().at(0).size() == _output.size());
+    assert(upstream_grad.value().size() == _output.size());
 
-    // Checks if this is the first time backpropagating through this vertex
-    // On the first pass we populate the derivative, which is I_n x gradient
-    // i.e., the upstream gradient is copied over
-    if (_gradient.empty()) {
-      _gradient = _upstream_gradient.value();
-    } else {
-      for (uint32_t row_index = 0; row_index < _gradient.size(); row_index++) {
-        for (uint32_t col_index = 0; col_index < _gradient.at(0).size();
-             col_index++) {
-          _gradient[row_index][col_index] +=
-              _upstream_gradient.value()[row_index][col_index];
-        }
-      }
-    }
-    // std::cout << "[summation-setting upstream grads]" << std::endl;
-    _left_input->setUpstreamGradient(/* gradient = */ _gradient);
-    _right_input->setUpstreamGradient(/* gradient = */ _gradient);
-    // std::cout << "[summation-finished upstream grads updates]" << std::endl;
+    // std::cout << "[summation-vertex-backward]" << std::endl;
+
+    _left_input->backward(/* upstream_grad = */ upstream_grad);
+    _right_input->backward(/* upstream_grad = */ upstream_grad);
   }
 
   inline std::string getName() final { return "Summation"; }
@@ -117,7 +102,7 @@ class Summation final : public Vertex,
   template <typename Archive>
   void serialize(Archive& archive) {
     archive(cereal::base_class<Vertex>(this), _left_input, _right_input,
-            _gradient, _output, _upstream_gradient, _output_length);
+            _gradient, _output, _output_length);
   }
 };
 

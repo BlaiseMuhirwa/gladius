@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cereal/access.hpp>
-#include <src/utils.hpp>
 #include <_types/_uint32_t.h>
+#include <src/utils.hpp>
 #include <ios>
 #include <memory>
 #include <stdexcept>
@@ -20,8 +20,7 @@ struct Parameter {
           "Fortis parameter initialization requires a non-empty vector(s).");
     }
     auto total_parameters = getParameterCount();
-    // _gradient = std::vector<std::vector<float>>(
-    //     1, std::vector<float>(total_parameters, 0.F));
+    _gradient = std::vector<float>(total_parameters, 0.F);
   }
 
   Parameter(const Parameter&) = delete;
@@ -29,12 +28,15 @@ struct Parameter {
 
   std::vector<std::vector<float>> getValue() const { return _value; }
 
-  std::vector<std::vector<float>> getGradient() const { return _gradient; }
+  std::vector<float> getGradient() const { return _gradient; }
 
-  inline void clearGradient() {
-    if (!_gradient.empty()) {
-      _gradient.clear();
+  inline void zeroOutGradient() {
+    if (!_gradients_zeroed_out) {
+      for (float& grad : _gradient) {
+        grad = 0.F;
+      }
     }
+    _gradients_zeroed_out = true;
   }
 
   /**
@@ -42,18 +44,18 @@ struct Parameter {
    * a wrapper around instances of this class. In this spirit, we need not
    * check again if the gradient is properly formatter or not in this class.
    */
-  void updateGradient(std::vector<std::vector<float>>& gradient) {
-    // assert(gradient.size() == _gradient.size());
-    // assert(_gradient.at(0).size() == gradient.at(0).size());
+  void updateGradient(std::vector<float>& gradient) {
+    assert(gradient.size() == _gradient.size());
 
-    // auto row_count = gradient.size();
-    // auto column_count = gradient.at(0).size();
-    // for (uint64_t row_index = 0; row_index < row_count; row_index++) {
-    //   for (uint64_t col_index = 0; col_index < column_count; col_index++) {
-    //     _gradient[row_index][col_index] += gradient[row_index][col_index];
-    //   }
-    // }
-    _gradient = gradient;
+    auto size = gradient.size();
+#pragma omp parallel for default(none) shared(_gradient, gradient, size)
+    for (uint64_t index = 0; index < size; index++) {
+      _gradient[index] = gradient[index];
+    }
+    _gradients_zeroed_out = false;
+
+    // std::cout << "[parameter-finished-grad-upate]" << std::endl;
+    // _gradient = gradient;
   }
 
   /**
@@ -80,13 +82,15 @@ struct Parameter {
  private:
   Parameter(){};
   std::vector<std::vector<float>> _value;
-  std::vector<std::vector<float>> _gradient;
+  std::vector<float> _gradient;
+
+  bool _gradients_zeroed_out = true;
 
   friend class cereal::access;
 
   template <typename Archive>
   void serialize(Archive& archive) {
-    archive(_value, _gradient);
+    archive(_value, _gradient, _gradients_zeroed_out);
   }
 };
 

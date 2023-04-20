@@ -58,11 +58,10 @@ include_directories(${CMAKE_BINARY_DIR})
 set(SKIP_PERFORMANCE_COMPARISON ON)
 add_subdirectory(dependencies/cereal EXCLUDE_FROM_ALL)
 
-
 # This requires having a CMakeLists.txt file in the subdirectory
 add_subdirectory(src)
 
-if (BUILD_TESTS)
+if(BUILD_TESTS)
   add_subdirectory(dependencies/googletest EXCLUDE_FROM_ALL)
   add_subdirectory(tests)
   message(STATUS "Building unit and integration tests")
@@ -72,7 +71,6 @@ add_subdirectory(src/comp_graph)
 add_subdirectory(src/trainers)
 add_subdirectory(src/params)
 add_subdirectory(src/comp_graph/vertices)
-
 
 set(FORTIS_SOURCES
     ${PROJECT_SOURCE_DIR}/src/trainers/trainer.cc
