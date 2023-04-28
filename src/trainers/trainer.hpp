@@ -17,11 +17,6 @@ class GradientDescentTrainer {
   void zeroOutGradients();
 
  private:
-  void updateWeightMatrixParameter(
-      std::vector<std::vector<float>>& weight_matrix,
-      std::vector<float>& jacobian) const;
-  void updateBiasVectorParameter(std::vector<float>& bias_vector,
-                                 std::vector<float>& gradient) const;
 
   std::shared_ptr<Model> _model;
   float _learning_rate;
