@@ -7,6 +7,7 @@
 #include <cereal/types/polymorphic.hpp>
 #include <cereal/types/vector.hpp>
 #include <_types/_uint32_t.h>
+#include <_types/_uint8_t.h>
 #include <src/comp_graph/vertices/vertex.hpp>
 #include <src/utils.hpp>
 #include <algorithm>
@@ -51,10 +52,12 @@ class SoftMaxActivation final
    * output. We return the index of the maximizer
    * TODO: Maybe parallelize this implementation?
    */
-  float getPredictedLabel() const {
+  uint32_t getPredictedLabel() const {
+    assert(!_output.empty());
+
     // Get iterator pointing to the maximum element
     auto max_iterator = std::max_element(_output.begin(), _output.end());
-    return static_cast<float>(std::distance(_output.begin(), max_iterator));
+    return static_cast<uint32_t>(std::distance(_output.begin(), max_iterator));
   }
 
   /**
@@ -95,10 +98,12 @@ class SoftMaxActivation final
       for (uint32_t col_index = 0; col_index < num_dimensions; col_index++) {
         if (row_index == col_index) {
           jacobian_matrix[row_index][col_index] =
-              -(_output[row_index] * _output[col_index]);
-        } else {
-          jacobian_matrix[row_index][col_index] =
               _output[row_index] * (1 - _output[row_index]);
+          // jacobian_matrix[row_index][col_index] =
+          //     -(_output[row_index] * _output[col_index]);
+        } else {
+          // jacobian_matrix[row_index][col_index] =
+          //     -(_output[row_index] * _output[col_index]);
         }
       }
     }
@@ -132,33 +137,20 @@ class SoftMaxActivation final
    * https://gregorygundersen.com/blog/2020/02/09/log-sum-exp/
    */
   std::shared_ptr<Vertex> applyOperation() final {
-    auto size = _logits.size();
+    float sum_exps = 0.F;
 
-    /* compute the max of logits and use it as a scaling factor */
-    auto max_element_iter = std::max_element(_logits.begin(), _logits.end());
-    uint32_t max_index =
-        static_cast<uint32_t>(std::distance(_logits.begin(), max_element_iter));
+    auto max_element = std::max_element(_logits.begin(), _logits.end());
 
-    auto normalizer = _logits[max_index];
-    auto log_sum_exponent =
-        logSumExponent(/* exponential_normalizer = */ normalizer);
-    log_sum_exponent += normalizer;
-
+    std::for_each(_logits.begin(), _logits.end(),
+                  [&sum_exps, &max_element](float logit) {
+                    sum_exps += exp(logit - *max_element);
+                  });
+                  
     for (auto& logit : _logits) {
-      float softmax_normalized_logit = exp(logit - log_sum_exponent);
+      float softmax_normalized_logit = exp(logit - *max_element) / sum_exps;
       _output.push_back(softmax_normalized_logit);
     }
     return shared_from_this();
-  }
-
-  float logSumExponent(float exponential_normalizer = 0.F) {
-    float sum_of_scaled_exponents = 0.F;
-    std::for_each(
-        _logits.begin(), _logits.end(),
-        [&sum_of_scaled_exponents, &exponential_normalizer](float logit) {
-          sum_of_scaled_exponents += exp(logit - exponential_normalizer);
-        });
-    return log(sum_of_scaled_exponents);
   }
 
   std::vector<VertexPointer> _incoming_edges;

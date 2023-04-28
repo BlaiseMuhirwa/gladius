@@ -27,8 +27,9 @@ class Model {
   /* We want to only have one instance of a model running in the background,
    * which is why we need to delete the copy constructor and copy assignment
    * operator
-   * TODO: Have the model hold an optional graph object and define Model::operator()
-   * which will launch the forward pass with the given input sample. 
+   * TODO: Have the model hold an optional graph object and define
+   * Model::operator() which will launch the forward pass with the given input
+   * sample.
    */
   Model(const Model&) = delete;
   Model& operator=(const Model&) = delete;
@@ -44,9 +45,7 @@ class Model {
   std::shared_ptr<Parameter> getParameterByID(uint32_t param_id);
   std::shared_ptr<LookupParameter> getLookupParameterByID(uint32_t param_id);
 
-  std::vector<std::variant<std::shared_ptr<Parameter>,
-                           std::shared_ptr<LookupParameter>>>&
-  getParameters() {
+  std::vector<std::shared_ptr<Parameter>>& getParameters() {
     return _parameters;
   }
 
@@ -76,9 +75,7 @@ class Model {
   // }
 
  private:
-  std::vector<std::variant<std::shared_ptr<Parameter>,
-                           std::shared_ptr<LookupParameter>>>
-      _parameters;
+  std::vector<std::shared_ptr<Parameter>> _parameters;
 
   // friend class cereal::access;
   // template <typename Archive>

@@ -8,16 +8,12 @@
 
 namespace fortis::trainers {
 
-using fortis::parameters::ParameterType;
-
 GradientDescentTrainer::GradientDescentTrainer(std::shared_ptr<Model> model,
                                                float learning_rate)
     : _model(std::move(model)), _learning_rate(learning_rate) {}
 
 void GradientDescentTrainer::takeDescentStep() {
-  auto parameters = _model->getParameters();
-  for (auto& variant_parameter : parameters) {
-    auto parameter = std::get<std::shared_ptr<Parameter>>(variant_parameter);
+  for (auto& parameter : _model->getParameters()) {
     auto computed_gradient = parameter->getGradient();
 
     auto parameter_value = parameter->getValue();
@@ -38,22 +34,14 @@ void GradientDescentTrainer::takeDescentStep() {
           "total inputs.");
     }
 
-    if (parameter->getParameterType() == ParameterType::WeightParameter) {
-      updateWeightMatrixParameter(parameter_value, computed_gradient);
-    } else if (parameter->getParameterType() == ParameterType::BiasParameter) {
-      updateBiasVectorParameter(parameter_value.at(0), computed_gradient);
-    } else {
-      throw std::runtime_error(
-          "Invalid parameter type encountered while "
-          "attempting parameter update.");
-    }
+    parameter->updateParameterValue(
+        /* update_factor = */ (-1 * _learning_rate));
+
   }
 }
 
 void GradientDescentTrainer::zeroOutGradients() {
-  auto parameters = _model->getParameters();
-  for (auto& variant_parameter : parameters) {
-    auto parameter = std::get<std::shared_ptr<Parameter>>(variant_parameter);
+  for (auto& parameter : _model->getParameters()) {
     parameter->zeroOutGradient();
   }
 }

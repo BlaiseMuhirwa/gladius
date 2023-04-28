@@ -36,7 +36,7 @@ class CrossEntropyLoss final
    * by the input vertex consists of logits prior to a softmax
    * operation.
    */
-  CrossEntropyLoss(VertexPointer input_vertex, std::vector<float>& label)
+  CrossEntropyLoss(VertexPointer input_vertex, std::vector<uint32_t>& label)
       : _input(std::move(input_vertex)), _label(std::move(label)) {
     auto probabilities_vector_shape = _input->getOutputShape();
 
@@ -109,8 +109,9 @@ class CrossEntropyLoss final
    * Assuming a one-hot encoded vector as an input, this function returns
    * the index in the vector where the label is 1.0
    */
-  static uint32_t findIndexWithPositiveLabel(const std::vector<float>& label) {
-    auto iterator = std::find(label.begin(), label.end(), 1.0);
+  static uint32_t findIndexWithPositiveLabel(
+      const std::vector<uint32_t>& label) {
+    auto iterator = std::find(label.begin(), label.end(), 1);
     if (iterator != label.end()) {
       return iterator - label.begin();
     }
@@ -130,12 +131,13 @@ class CrossEntropyLoss final
     _loss = 0.F;
     auto output_size = _label.size();
     auto probabilities = _input->getOutput().at(0);
+    float epsilon = 1e-5;
+
     for (uint32_t prob_index = 0; prob_index < output_size; prob_index++) {
-      // std::cout << "[softmax-normalized logit] " << probabilities[prob_index]
-      //           << std::endl;
-      (*_loss) += _label[prob_index] * log(probabilities[prob_index]);
+      if (_label[prob_index]) {
+        (*_loss) -= log(probabilities[prob_index] + epsilon);
+      }
     }
-    (*_loss) = -(*_loss);
     // std::cout << "[computed loss]: " << _loss.value() << std::endl;
     return shared_from_this();
   }
@@ -143,7 +145,7 @@ class CrossEntropyLoss final
   VertexPointer _input;
 
   // One-hot encoded vector representing the label
-  std::vector<float> _label;
+  std::vector<uint32_t> _label;
   std::optional<float> _loss;
 
   CrossEntropyLoss() = default;

@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <fstream>
 #include <iterator>
-#include <math.h>
 #include <random>
 #include <stdexcept>
 #include <variant>
@@ -53,7 +52,7 @@ Parameter& Model::addParameter(const std::vector<uint32_t>&& dimensions) {
   std::shared_ptr<Parameter> parameter(
       new Parameter(std::move(parameter_vectors)));
 
-  _parameters.emplace_back(std::move(parameter));
+  _parameters.emplace_back(parameter);
 
   return *parameter;
 }
@@ -66,32 +65,36 @@ std::shared_ptr<parameters::Parameter> Model::getParameterByID(
     throw std::invalid_argument(
         "Invalid ID encountered while attempting to access a model parameter.");
   }
-  try {
-    auto parameter =
-        std::get<std::shared_ptr<Parameter>>(_parameters[param_id]);
-    return parameter;
-  } catch (const std::bad_variant_access& exception) {
-    throw std::invalid_argument(
-        "param_id is not compatible with the requested parameter type." +
-        std::to_string(*exception.what()));
-  }
+
+  auto parameter = _parameters[param_id];
+  return parameter;
+  // try {
+  //   auto parameter =
+  //       std::get<std::shared_ptr<Parameter>>(_parameters[param_id]);
+  //   return parameter;
+  // } catch (const std::bad_variant_access& exception) {
+  //   throw std::invalid_argument(
+  //       "param_id is not compatible with the requested parameter type." +
+  //       std::to_string(*exception.what()));
+  // }
 }
 
-std::shared_ptr<LookupParameter> Model::getLookupParameterByID(
-    uint32_t param_id) {
-  if (param_id >= _parameters.size()) {
-    throw std::invalid_argument(
-        "Invalid ID encountered while attempting to access a model parameter.");
-  }
-  try {
-    auto parameter =
-        std::get<std::shared_ptr<LookupParameter>>(_parameters[param_id]);
-    return parameter;
-  } catch (const std::bad_variant_access& exception) {
-    throw std::invalid_argument(
-        "param_id is not compatible with the requested parameter type." +
-        std::to_string(*exception.what()));
-  }
-}
+// std::shared_ptr<LookupParameter> Model::getLookupParameterByID(
+//     uint32_t param_id) {
+//   if (param_id >= _parameters.size()) {
+//     throw std::invalid_argument(
+//         "Invalid ID encountered while attempting to access a model
+//         parameter.");
+//   }
+//   try {
+//     auto parameter =
+//         std::get<std::shared_ptr<LookupParameter>>(_parameters[param_id]);
+//     return parameter;
+//   } catch (const std::bad_variant_access& exception) {
+//     throw std::invalid_argument(
+//         "param_id is not compatible with the requested parameter type." +
+//         std::to_string(*exception.what()));
+//   }
+// }
 
 }  // namespace fortis

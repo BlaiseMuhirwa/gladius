@@ -12,7 +12,8 @@ namespace fortis::parameters {
 
 enum class ParameterType { WeightParameter, BiasParameter };
 
-struct Parameter {
+class Parameter {
+ public:
   explicit Parameter(std::vector<std::vector<float>>&& input)
       : _value(std::move(input)) {
     if (_value.empty()) {
@@ -26,9 +27,12 @@ struct Parameter {
   Parameter(const Parameter&) = delete;
   Parameter& operator=(const Parameter&) = delete;
 
-  std::vector<std::vector<float>> getValue() const { return _value; }
+  Parameter(Parameter&&) = delete;
+  Parameter& operator=(const Parameter&&) = delete;
 
-  std::vector<float> getGradient() const { return _gradient; }
+  std::vector<std::vector<float>>& getValue() { return _value; }
+
+  std::vector<float>& getGradient() { return _gradient; }
 
   inline void zeroOutGradient() {
     if (!_gradients_zeroed_out) {
@@ -67,7 +71,7 @@ struct Parameter {
     return _value.size() * _value.at(0).size();
   }
 
-  ParameterType getParameterType() {
+  ParameterType getParameterType() const {
     auto dimension = _value.size();
     if (dimension == 1) {
       return ParameterType::BiasParameter;
@@ -77,6 +81,30 @@ struct Parameter {
 
   std::pair<uint32_t, uint32_t> getParameterShape() const {
     return {_value.size(), _value[0].size()};
+  }
+
+  void updateParameterValue(float update_factor = 0.0) {
+    auto total_rows = _value.size();
+    auto total_cols = _value.at(0).size();
+
+    for (uint64_t row = 0; row < total_rows; row++) {
+      for (uint64_t col = 0; col < total_cols; col++) {
+        uint64_t grad_index = (row * total_cols) + col;
+        _value[row][col] += (update_factor * _gradient[grad_index]);
+      }
+    }
+  }
+
+  void printValue() const {
+    auto param_type = getParameterType();
+    if (param_type != ParameterType::BiasParameter) {
+      return;
+    }
+
+    for (const auto& val : _value.at(0)) {
+      std::cout << val << " ";
+    }
+    std::cout << "\n";
   }
 
  private:

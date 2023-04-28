@@ -51,12 +51,12 @@ class Graph {
    * TODO: Clean up the vertex interface so that we don't end up with
    *       the following situation (where we are computing the loss value).
    */
-  std::tuple<float, float> launchForwardPass() {
+  std::tuple<uint32_t, float> launchForwardPass() {
     auto graph_size = _topologically_sorted_vertices.size();
     assert(_topologically_sorted_vertices[graph_size - 1]->getName() ==
            "CrossEntropyLoss");
 
-    float prediction;
+    uint32_t prediction;
     for (uint32_t vertex_index = 0; vertex_index < graph_size; vertex_index++) {
       auto vertex = _topologically_sorted_vertices[vertex_index];
       vertex->forward();
