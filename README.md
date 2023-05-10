@@ -1,6 +1,11 @@
 
 ## Fortis
 
+[![GitHub issues](https://img.shields.io/github/issues/BlaiseMuhirwa/fortis)](https://github.com/BlaiseMuhirwa/fortis/issues)
+[![GitHub forks](https://img.shields.io/github/forks/BlaiseMuhirwa/fortis)](https://github.com/BlaiseMuhirwa/fortis/network)
+[![GitHub stars](https://img.shields.io/github/stars/BlaiseMuhirwa/fortis)](https://github.com/BlaiseMuhirwa/fortis/stargazers)
+[![GitHub license](https://img.shields.io/github/license/BlaiseMuhirwa/fortis)](https://github.com/BlaiseMuhirwa/fortis/blob/main/LICENSE)
+
 This project started out of my desire to have a very deep understanding of
 dynamic computation graphs in [PyTorch](https://pytorch.org/), a framework that 
 I use and love. Inspired by [the original paper of DyNet](https://arxiv.org/pdf/1701.03980.pdf), this repository implements a light-weight general-purpose deep learning 
