@@ -106,9 +106,9 @@ class Vertex {
   /**
    * Returns the output of the forward pass through the vertex.
    */
-  virtual inline std::vector<std::vector<float>> getOutput() const {
+  virtual inline std::vector<float>& getOutput() {
     assert(!_output.empty());
-    return {_output};
+    return _output;
   }
 
   /**
@@ -121,7 +121,7 @@ class Vertex {
    * Returns the gradient of the loss function with respect to
    * the operation computed by the vertex.
    */
-  virtual inline std::vector<float> getGradient() const {
+  virtual inline std::vector<float>& getGradient() {
     assert(_local_gradient.has_value());
     return _local_gradient.value();
   }

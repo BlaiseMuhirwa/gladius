@@ -137,18 +137,29 @@ class SoftMaxActivation final
    * https://gregorygundersen.com/blog/2020/02/09/log-sum-exp/
    */
   std::shared_ptr<Vertex> applyOperation() final {
+    // Let's use the log-softmax instead of the regular softmax
+    // to penalize the model more when it predicts the incorrect
+    // class
     float sum_exps = 0.F;
-
+    // std::cout << "[logits]" << " ";
+    // for (auto& logit : _logits) {
+    //   std::cout << logit << " ";
+    // }
+    // std::cout << "\n";
     auto max_element = std::max_element(_logits.begin(), _logits.end());
 
+    // std::cout << "[max-element] " << *max_element << std::endl;
     std::for_each(_logits.begin(), _logits.end(),
                   [&sum_exps, &max_element](float logit) {
                     sum_exps += exp(logit - *max_element);
                   });
-                  
+    // std::cout << "[sum-exps] " << sum_exps << std::endl;
+    // float lse = log(sum_exps);
     for (auto& logit : _logits) {
-      float softmax_normalized_logit = exp(logit - *max_element) / sum_exps;
-      _output.push_back(softmax_normalized_logit);
+      float log_softmax = exp(logit - *max_element) / sum_exps;
+      // std::cout << "[softmax] = " << log_softmax << std::endl;
+      // float softmax_normalized_logit = exp(logit - *max_element) / sum_exps;
+      _output.push_back(log_softmax);
     }
     return shared_from_this();
   }
@@ -322,7 +333,7 @@ class TanHActivation final
       _jacobian = std::vector<std::vector<float>>(
           dimensions, std::vector<float>(dimensions, 0.F));
 
-      auto input_vector = _incoming_edges.at(0)->getOutput();
+      // auto input_vector = _incoming_edges.at(0)->getOutput();
       for (uint32_t index = 0; index < dimensions; index++) {
         auto current_activation = _output[index];
         float tanh_derivative = 1 - (current_activation * current_activation);

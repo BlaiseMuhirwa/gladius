@@ -17,7 +17,6 @@ class GradientDescentTrainer {
   void zeroOutGradients();
 
  private:
-
   std::shared_ptr<Model> _model;
   float _learning_rate;
 

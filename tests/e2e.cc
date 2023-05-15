@@ -28,8 +28,9 @@ using fortis::comp_graph::InnerProduct;
 using fortis::comp_graph::InputVertex;
 using fortis::comp_graph::ParameterVertex;
 using fortis::comp_graph::ReLUActivation;
-using fortis::comp_graph::SoftMaxActivation;
+// using fortis::comp_graph::SoftMaxActivation;
 using fortis::comp_graph::Summation;
+// using fortis::comp_graph::TanHActivation;
 using fortis::comp_graph::Vertex;
 using fortis::comp_graph::VertexPointer;
 using fortis::parameters::ParameterType;
@@ -38,11 +39,11 @@ using fortis::trainers::GradientDescentTrainer;
 static inline const char* TRAIN_DATA = "data/train-images-idx3-ubyte";
 static inline const char* TRAIN_LABELS = "data/train-labels-idx1-ubyte";
 static inline constexpr uint32_t NUM_LAYERS = 1;
-static inline constexpr float LEARNING_RATE = 0.01;
+static inline constexpr float LEARNING_RATE = 0.001;
 static inline constexpr float ACCURACY_THRESHOLD = 0.9;
 
 // Total training examples: 60000
-static inline constexpr uint32_t FETCH_COUNT = 30000;
+static inline constexpr uint32_t FETCH_COUNT = 300;
 static inline constexpr uint32_t TRAIN_COUNT = 0.75 * FETCH_COUNT;
 
 static void initializeParameters(
@@ -61,14 +62,13 @@ static void initializeParameters(
  */
 static std::vector<std::tuple<ParameterType, std::vector<uint32_t>>>
 defineModelParameters() {
-  return {
-      {ParameterType::WeightParameter, {10, 784}},
-      {ParameterType::BiasParameter, {10}},
-      // {ParameterType::WeightParameter, {256, 256}},
-      // {ParameterType::BiasParameter, {256}},
-      // {ParameterType::WeightParameter, {10, 128}},
-      // {ParameterType::BiasParameter, {10}}
-  };
+  return {{ParameterType::WeightParameter, {10, 784}},
+          {ParameterType::BiasParameter, {10}},
+          // {ParameterType::WeightParameter, {256, 256}},
+          // {ParameterType::BiasParameter, {256}},
+          // {ParameterType::WeightParameter, {10, 128}},
+          // {ParameterType::BiasParameter, {10}}
+          };
 }
 
 static float computeAccuracy(std::vector<uint32_t>& predicted_labels,
@@ -127,19 +127,19 @@ static std::unique_ptr<fortis::comp_graph::Graph> buildComputationGraph(
 
     if (layer_index < NUM_LAYERS - 1) {
       // std::cout << "[relu]" << std::endl;
-      std::shared_ptr<ReLUActivation> relu_activation(
+      std::shared_ptr<ReLUActivation> tanh_activation(
           new ReLUActivation(/* incoming_edges = */ {summation_op}));
-      computation_graph->addVertex(relu_activation);
+      computation_graph->addVertex(tanh_activation);
 
-      current_activations = relu_activation;
+      current_activations = tanh_activation;
     } else {
       // std::cout << "[softmax]" << std::endl;
-      std::shared_ptr<SoftMaxActivation> softmax(
-          new SoftMaxActivation(/* incoming_edges = */ {summation_op}));
-      computation_graph->addVertex(softmax);
+      // std::shared_ptr<SoftMaxActivation> softmax(
+      //     new SoftMaxActivation(/* incoming_edges = */ {summation_op}));
+      // computation_graph->addVertex(softmax);
 
       auto loss_function = std::make_shared<CrossEntropyLoss>(
-          /* input_vertex = */ softmax, /* label = */ label);
+          /* input_vertex = */ summation_op, /* label = */ label);
       computation_graph->addVertex(loss_function);
     }
   }
@@ -155,6 +155,8 @@ static void train(
   float total_loss = 0.F;
 
   for (uint32_t epoch = 0; epoch < epochs; epoch++) {
+#pragma omp parallel for default(none) \
+    shared(dataset, model, total_loss, trainer) 
     for (auto [input, label] : dataset) {
       trainer->zeroOutGradients();
       auto graph = buildComputationGraph(model, input, label);
@@ -169,15 +171,17 @@ static void train(
       std::optional<std::vector<float>> grad = std::nullopt;
       loss_vertex->backward(grad);
 
+      // #pragma omp critical
       trainer->takeDescentStep();
+    
     }
 
     auto avg_loss = total_loss / dataset.size();
     std::cout << "[epoch-" << epoch + 1 << "-loss] = " << avg_loss << std::endl;
 
     total_loss = 0.F;
-  }
-}
+  }  
+}  
 
 static float evaluate(
     std::shared_ptr<fortis::Model>&& model,
@@ -186,13 +190,13 @@ static float evaluate(
   std::vector<uint32_t> predictions;
   std::vector<std::vector<uint32_t>> labels;
 
-  for (auto [input, label] : dataset) {
-    labels.emplace_back(label);
+  for (auto& [input, label] : dataset) {
+    labels.push_back(std::move(label));
 
     auto graph = buildComputationGraph(model, input, label);
     auto [predicted_label, loss] = graph->launchForwardPass();
 
-    predictions.emplace_back(predicted_label);
+    predictions.push_back(predicted_label);
   }
 
   auto accuracy = computeAccuracy(predictions, labels);
@@ -224,12 +228,13 @@ TEST(FortisMLPMnist, TestAccuracyScore) {
   auto gradient_descent_trainer = std::make_shared<GradientDescentTrainer>(
       /* model = */ model, /* learning_rate = */ LEARNING_RATE);
 
-  train(gradient_descent_trainer, training_data, 50);
+  train(gradient_descent_trainer, training_data, 200);
 
-  auto accuracy = evaluate(gradient_descent_trainer->getModel(), testing_data);
+  auto accuracy = evaluate(gradient_descent_trainer->getModel(),
+  testing_data);
 
   ASSERT_GE(accuracy, ACCURACY_THRESHOLD);
 
-}  // namespace fortis::tests
+}  
 
 }  // namespace fortis::tests

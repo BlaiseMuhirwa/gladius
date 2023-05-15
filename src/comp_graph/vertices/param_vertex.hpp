@@ -50,7 +50,7 @@ class ParameterVertex final
 
     _parameter->updateGradient(upstream_grad.value());
   }
-  inline std::vector<std::vector<float>> getOutput() const final {
+  inline std::vector<float> getOutput() const final {
     return _parameter->getValue();
   }
 

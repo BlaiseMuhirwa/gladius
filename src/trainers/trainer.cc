@@ -36,7 +36,6 @@ void GradientDescentTrainer::takeDescentStep() {
 
     parameter->updateParameterValue(
         /* update_factor = */ (-1 * _learning_rate));
-
   }
 }
 
@@ -45,7 +44,6 @@ void GradientDescentTrainer::zeroOutGradients() {
     parameter->zeroOutGradient();
   }
 }
-
 
 std::shared_ptr<Model> GradientDescentTrainer::getModel() { return _model; }
 

@@ -38,9 +38,9 @@ class Model {
 
   // For now we assume that we only have 2 dimensions for the vector
   // TODO(blaise): Relax this assumption
-  Parameter& addParameter(const std::vector<uint32_t>&& dimensions);
+  void addParameter(const std::vector<uint32_t>&& dimensions);
 
-  LookupParameter& addLookupParameter(LookupParameter& lookup_parameter);
+  void addLookupParameter(LookupParameter& lookup_parameter);
 
   std::shared_ptr<Parameter> getParameterByID(uint32_t param_id);
   std::shared_ptr<LookupParameter> getLookupParameterByID(uint32_t param_id);

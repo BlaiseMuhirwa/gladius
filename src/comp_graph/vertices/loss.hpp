@@ -38,27 +38,28 @@ class CrossEntropyLoss final
    */
   CrossEntropyLoss(VertexPointer input_vertex, std::vector<uint32_t>& label)
       : _input(std::move(input_vertex)), _label(std::move(label)) {
-    auto probabilities_vector_shape = _input->getOutputShape();
+    auto logits_shape = _input->getOutputShape();
 
-    if (probabilities_vector_shape.first != 1) {
+    if (logits_shape.first != 1) {
       throw std::invalid_argument(
           "The input vector to the cross entropy loss must be a "
           "uni-dimensional array. Got instead a multi-dimensional array of "
           "shape (" +
-          std::to_string(probabilities_vector_shape.first) + ", " +
-          std::to_string(probabilities_vector_shape.second) + ").");
+          std::to_string(logits_shape.first) + ", " +
+          std::to_string(logits_shape.second) + ").");
     }
 
-    if (probabilities_vector_shape.second != _label.size()) {
+    if (logits_shape.second != _label.size()) {
       throw std::invalid_argument(
           "The size of the probability vector must be equal to the size of the "
           "label vector. The Probabilities vector has size " +
-          std::to_string(probabilities_vector_shape.second) +
+          std::to_string(logits_shape.second) +
           " while the label vector has size " + std::to_string(_label.size()));
     }
 
     _local_gradient =
-        std::vector<float>(probabilities_vector_shape.second, 0.F);
+        std::vector<float>(logits_shape.second, 0.F);
+    _softmax = std::vector<float>(logits_shape.second, 0.F);
   }
 
   void forward() final {
@@ -81,15 +82,20 @@ class CrossEntropyLoss final
     assert(!upstream_grad.has_value());
     assert(_local_gradient.has_value());
 
-    auto output_shape = _input->getOutputShape();
-    auto probabilities = _input->getOutput().at(0);
+    // auto probabilities = _input->getOutput().at(0);
 
-    uint32_t index_with_positive_label = findIndexWithPositiveLabel(_label);
+    for (uint32_t i = 0; i < _softmax.size(); i++) {
+      (*_local_gradient)[i] = _softmax[i] - _label[i];
+    }
 
-    // derivative of -log(P_j) where j is the index
-    auto derivative_at_index =
-        -(1.F / probabilities.at(index_with_positive_label));
-    (*_local_gradient)[index_with_positive_label] = derivative_at_index;
+    // uint32_t index_with_positive_label = findIndexWithPositiveLabel(_label);
+
+    // // derivative of -log(P_j) where j is the index
+
+    // auto derivative_at_index =
+    //     -(1.F / (probabilities.at(index_with_positive_label)));
+
+    // (*_local_gradient)[index_with_positive_label] = derivative_at_index;
 
     // std::cout << "[loss-backward]" << std::endl;
     _input->backward(/* upstream_grad = */ _local_gradient);
@@ -130,12 +136,25 @@ class CrossEntropyLoss final
   std::shared_ptr<Vertex> applyOperation() final {
     _loss = 0.F;
     auto output_size = _label.size();
-    auto probabilities = _input->getOutput().at(0);
-    float epsilon = 1e-5;
+    auto logits = _input->getOutput().at(0);
 
-    for (uint32_t prob_index = 0; prob_index < output_size; prob_index++) {
-      if (_label[prob_index]) {
-        (*_loss) -= log(probabilities[prob_index] + epsilon);
+    float sum_exps = 0.F;
+    auto max_element = std::max_element(logits.begin(), logits.end());
+    std::for_each(logits.begin(), logits.end(),
+                  [&sum_exps, &max_element](float logit) {
+                    sum_exps += exp(logit - *max_element);
+                  });
+    assert(logits.size() == _label.size());
+
+    for (uint32_t i = 0; i < logits.size(); i++) {
+      float softmax = exp(logits[i] - *max_element) / sum_exps;
+      _softmax[i] = softmax;
+
+      if (_label[i]) {
+        (*_loss) -= log(softmax);
+        // This is when we use log-softmax as opposed to softmax
+        // *_loss -= probabilities[prob_index];
+
       }
     }
     // std::cout << "[computed loss]: " << _loss.value() << std::endl;
@@ -147,13 +166,14 @@ class CrossEntropyLoss final
   // One-hot encoded vector representing the label
   std::vector<uint32_t> _label;
   std::optional<float> _loss;
+  std::vector<float> _softmax;
 
   CrossEntropyLoss() = default;
 
   template <typename Archive>
   void serialize(Archive& archive) {
     archive(cereal::base_class<Vertex>(this), _input, _label, _loss,
-            _local_gradient);
+            _local_gradient, _softmax);
   }
 };
 

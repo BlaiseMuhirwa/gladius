@@ -43,7 +43,7 @@ class Graph {
   }
 
   void addVertex(VertexPointer vertex) {
-    _topologically_sorted_vertices.emplace_back(std::move(vertex));
+    _topologically_sorted_vertices.push_back(std::move(vertex));
   }
 
   /**

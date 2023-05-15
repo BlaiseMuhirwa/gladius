@@ -79,14 +79,14 @@ class Summation final : public Vertex,
 
  private:
   std::shared_ptr<Vertex> applyOperation() final {
-    auto left_output_vector = _left_input->getOutput().at(0);
-    auto right_output_vector = _right_input->getOutput().at(0);
+    auto left_output_vector = _left_input->getOutput();
+    auto right_output_vector = _right_input->getOutput();
     auto vector_size = left_output_vector.size();
 
     for (uint32_t index = 0; index < vector_size; index++) {
       auto sum = left_output_vector[index] + right_output_vector[index];
       // std::cout << "[summation val] " << sum << std::endl;
-      _output.emplace_back(sum);
+      _output.push_back(sum);
     }
     return shared_from_this();
   }

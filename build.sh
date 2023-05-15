@@ -16,5 +16,5 @@ fi
 ## DCMAKE_EXPORT_COMPILE_COMMANDS=OFF since clangd seems to consume so much 
 ## memory and cpu time 
 cd build && cmake -DBUILD_TESTS=${TESTING} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_COMPILER:FILEPATH=/usr/local/opt/llvm/bin/clang++ ..
-make 
+make -j 8
 cd ..
