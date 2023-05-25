@@ -49,6 +49,9 @@ option(BUILD_TESTS "Builds unit and integration tests" OFF)
 
 # set compiler flags TODO: Add -lbenchmark compiler flag and the corresponding
 # benchmark submodule https://github.com/google/benchmark
+# Flags:
+#   - fopenmp: Enables executing parallel code blocks with OpenMP
+#   - O3: Enables compiler vectorization (i.e., like SIMD)
 set(CMAKE_CXX_FLAGS " -std=c++20 -fopenmp -O3")
 
 include_directories(".")
