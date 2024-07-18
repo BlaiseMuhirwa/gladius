@@ -1,17 +1,14 @@
 
-## Fortis
+## Gladius
 
-[![GitHub issues](https://img.shields.io/github/issues/BlaiseMuhirwa/fortis)](https://github.com/BlaiseMuhirwa/fortis/issues)
-[![GitHub forks](https://img.shields.io/github/forks/BlaiseMuhirwa/fortis)](https://github.com/BlaiseMuhirwa/fortis/network)
-[![GitHub stars](https://img.shields.io/github/stars/BlaiseMuhirwa/fortis)](https://github.com/BlaiseMuhirwa/fortis/stargazers)
-[![GitHub license](https://img.shields.io/github/license/BlaiseMuhirwa/fortis)](https://github.com/BlaiseMuhirwa/fortis/blob/main/LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/BlaiseMuhirwa/gladius)](https://github.com/BlaiseMuhirwa/gladius/issues)
+[![GitHub forks](https://img.shields.io/github/forks/BlaiseMuhirwa/gladius)](https://github.com/BlaiseMuhirwa/gladius/network)
+[![GitHub stars](https://img.shields.io/github/stars/BlaiseMuhirwa/gladius)](https://github.com/BlaiseMuhirwa/gladius/stargazers)
+[![GitHub license](https://img.shields.io/github/license/BlaiseMuhirwa/gladius)](https://github.com/BlaiseMuhirwa/gladius/blob/main/LICENSE)
 
-This project started out of my desire to have a very deep understanding of
-dynamic computation graphs in [PyTorch](https://pytorch.org/), a framework that 
+I started this project to get a better understanding of dynamic computation graphs in [PyTorch](https://pytorch.org/), a framework 
 I use and love. Inspired by [the original paper of DyNet](https://arxiv.org/pdf/1701.03980.pdf), this repository implements a light-weight general-purpose deep learning 
-library from scratch. The ultimate goal is to have a well-maintained C++ library 
-with Rust (and potentially Python) wrappers and a graphical interface for visualizing
-embeddings in 3-D geometry. 
+library from scratch. The ultimate goal is to have a well-maintained C++ library that can be used to end-to-end training. 
 
 ### Architectural Design
 Fortis's architecture consists of the following components: 
