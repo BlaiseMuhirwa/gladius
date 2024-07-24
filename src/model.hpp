@@ -15,7 +15,7 @@
 #include <benchmark/benchmark.h>
 #endif
 
-namespace fortis {
+namespace gladius {
 
 using parameters::LookupParameter;
 using parameters::Parameter;
@@ -55,14 +55,14 @@ class Model {
 
   // void save(const std::string& file_name) const {
   //   std::ofstream file_stream =
-  //       fortis::utils::handle_ofstream(file_name, std::ios::binary);
+  //       gladius::utils::handle_ofstream(file_name, std::ios::binary);
   //   cereal::BinaryOutputArchive output_archive(file_stream);
 
   //   output_archive(*this);
   // }
   // static std::shared_ptr<Model> load(const std::string &file_name) {
   //   std::ifstream file_stream =
-  //       fortis::handle_ifstream(file_name, std::ios::binary);
+  //       gladius::handle_ifstream(file_name, std::ios::binary);
 
   //   cereal::BinaryInputArchive input_archive(file_stream);
   //   // Model model;
@@ -84,4 +84,4 @@ class Model {
   // }
 };
 
-}  // namespace fortis
+}  // namespace gladius

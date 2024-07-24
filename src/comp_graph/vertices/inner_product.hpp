@@ -14,10 +14,10 @@
 #include <utility>
 #include <vector>
 
-namespace fortis::comp_graph {
+namespace gladius::comp_graph {
 
-using fortis::comp_graph::Vertex;
-using fortis::comp_graph::VertexPointer;
+using gladius::comp_graph::Vertex;
+using gladius::comp_graph::VertexPointer;
 
 class InnerProduct final : public Vertex,
                            public std::enable_shared_from_this<InnerProduct> {
@@ -101,7 +101,7 @@ class InnerProduct final : public Vertex,
 
     for (uint32_t col_index = 0; col_index < num_columns; col_index++) {
       (*_local_right_gradient)[col_index] +=  // NOLINT
-          fortis::utils::innerProduct(        // NOLINT
+          gladius::utils::innerProduct(        // NOLINT
               /* vector = */ upstream_grad,   // NOLINT
               /* matrix = */ _left_input->getOutput(),
               /* col_index = */ col_index);
@@ -157,7 +157,7 @@ class InnerProduct final : public Vertex,
     for (uint32_t col_index = 0; col_index < total_jacobian_columns;
          col_index++) {
       (*_local_left_gradient)[col_index] +=  // NOLINT
-          fortis::utils::innerProduct(       // NOLINT
+          gladius::utils::innerProduct(       // NOLINT
               /* vector = */ upstream_grad,
               /* matrix = */ _left_input_jacobian.value(),
               /* col_index = */ col_index);
@@ -174,7 +174,7 @@ class InnerProduct final : public Vertex,
 
     for (uint32_t row_index = 0; row_index < size; row_index++) {
       auto current_row = _left_input->getOutput().at(row_index);
-      auto inner_product = fortis::utils::innerProduct(
+      auto inner_product = gladius::utils::innerProduct(
           /*first = */ current_row, /* second = */ right_output_vector);
 
       _output[row_index] = inner_product;
@@ -201,6 +201,6 @@ class InnerProduct final : public Vertex,
   }
 };
 
-}  // namespace fortis::comp_graph
+}  // namespace gladius::comp_graph
 
-CEREAL_REGISTER_TYPE(fortis::comp_graph::InnerProduct)
+CEREAL_REGISTER_TYPE(gladius::comp_graph::InnerProduct)

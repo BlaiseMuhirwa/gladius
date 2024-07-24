@@ -5,7 +5,7 @@
 #include <memory>
 #include <stdexcept>
 
-namespace fortis::trainers {
+namespace gladius::trainers {
 
 class GradientDescentTrainer {
  public:
@@ -27,4 +27,4 @@ class GradientDescentTrainer {
   }
 };
 
-}  // namespace fortis::trainers
+}  // namespace gladius::trainers

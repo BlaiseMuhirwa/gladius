@@ -9,9 +9,9 @@
 #include <memory>
 #include <vector>
 
-namespace fortis::comp_graph {
+namespace gladius::comp_graph {
 
-using fortis::comp_graph::Vertex;
+using gladius::comp_graph::Vertex;
 
 class InputVertex final : public Vertex,
                           public std::enable_shared_from_this<InputVertex> {
@@ -52,6 +52,6 @@ class InputVertex final : public Vertex,
   }
 };
 
-}  // namespace fortis::comp_graph
+}  // namespace gladius::comp_graph
 
-CEREAL_REGISTER_TYPE(fortis::comp_graph::InputVertex)
+CEREAL_REGISTER_TYPE(gladius::comp_graph::InputVertex)

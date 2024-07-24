@@ -9,7 +9,7 @@
 #include <random>
 #include <stdexcept>
 #include <variant>
-namespace fortis {
+namespace gladius {
 
 // TODO(blaise): Parallelize this implementation with OpenMP
 void Model::addParameter(const std::vector<uint32_t>&& dimensions) {
@@ -92,4 +92,4 @@ std::shared_ptr<parameters::Parameter> Model::getParameterByID(
 //   }
 // }
 
-}  // namespace fortis
+}  // namespace gladius

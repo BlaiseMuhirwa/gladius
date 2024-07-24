@@ -19,8 +19,8 @@
 #include <stdexcept>
 #include <utility>
 
-namespace fortis::comp_graph {
-using fortis::comp_graph::Vertex;
+namespace gladius::comp_graph {
+using gladius::comp_graph::Vertex;
 
 class SoftMaxActivation final
     : public Vertex,
@@ -109,7 +109,7 @@ class SoftMaxActivation final
     }
 
     for (uint32_t col_index = 0; col_index < num_dimensions; col_index++) {
-      (*_local_gradient)[col_index] = fortis::utils::innerProduct(  // NOLINT
+      (*_local_gradient)[col_index] = gladius::utils::innerProduct(  // NOLINT
           /* vector = */ upstream_grad.value(),
           /* matrix = */ jacobian_matrix,
           /* col_index = */ col_index);
@@ -234,7 +234,7 @@ class ReLUActivation final
     // This is not quite correct since ReLU is not differentiable at 0,
     // but we will just set it to 0 at 0
     for (uint32_t col_index = 0; col_index < dimensions; col_index++) {
-      (*_local_gradient)[col_index] += fortis::utils::innerProduct(
+      (*_local_gradient)[col_index] += gladius::utils::innerProduct(
           /* vector = */ upstream_grad.value(),
           /* matrix = */ _jacobian.value(),
           /* col_index = */ col_index);
@@ -341,7 +341,7 @@ class TanHActivation final
       }
     }
     for (uint32_t col_index = 0; col_index < dimensions; col_index++) {
-      (*_local_gradient)[col_index] += fortis::utils::innerProduct(  // NOLINT
+      (*_local_gradient)[col_index] += gladius::utils::innerProduct(  // NOLINT
           /* vector = */ upstream_grad.value(),
           /* matrix = */ _jacobian.value(),
           /* col_index = */ col_index);
@@ -384,10 +384,10 @@ class TanHActivation final
   }
 };
 
-}  // namespace fortis::comp_graph
+}  // namespace gladius::comp_graph
 
 #include <cereal/archives/binary.hpp>
 
-CEREAL_REGISTER_TYPE(fortis::comp_graph::TanHActivation)
-CEREAL_REGISTER_TYPE(fortis::comp_graph::ReLUActivation)
-CEREAL_REGISTER_TYPE(fortis::comp_graph::SoftMaxActivation)
+CEREAL_REGISTER_TYPE(gladius::comp_graph::TanHActivation)
+CEREAL_REGISTER_TYPE(gladius::comp_graph::ReLUActivation)
+CEREAL_REGISTER_TYPE(gladius::comp_graph::SoftMaxActivation)

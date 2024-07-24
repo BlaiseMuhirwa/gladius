@@ -11,8 +11,8 @@
 #include <memory>
 #include <stdexcept>
 
-namespace fortis::comp_graph {
-using fortis::parameters::Parameter;
+namespace gladius::comp_graph {
+using gladius::parameters::Parameter;
 
 class ParameterVertex final
     : public Vertex,
@@ -72,6 +72,6 @@ class ParameterVertex final
   }
 };
 
-}  // namespace fortis::comp_graph
+}  // namespace gladius::comp_graph
 
-CEREAL_REGISTER_TYPE(fortis::comp_graph::ParameterVertex)
+CEREAL_REGISTER_TYPE(gladius::comp_graph::ParameterVertex)

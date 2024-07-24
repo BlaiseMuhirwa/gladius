@@ -14,10 +14,10 @@
 #include <stdexcept>
 #include <vector>
 
-namespace fortis::comp_graph {
+namespace gladius::comp_graph {
 
-using fortis::comp_graph::Vertex;
-using fortis::comp_graph::VertexPointer;
+using gladius::comp_graph::Vertex;
+using gladius::comp_graph::VertexPointer;
 
 /**
  * Here we use the cross-entropy loss always with the softmax activation
@@ -177,6 +177,6 @@ class CrossEntropyLoss final
   }
 };
 
-}  // namespace fortis::comp_graph
+}  // namespace gladius::comp_graph
 
-CEREAL_REGISTER_TYPE(fortis::comp_graph::CrossEntropyLoss)
+CEREAL_REGISTER_TYPE(gladius::comp_graph::CrossEntropyLoss)

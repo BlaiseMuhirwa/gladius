@@ -11,7 +11,7 @@ I use and love. Inspired by [the original paper of DyNet](https://arxiv.org/pdf/
 library from scratch. The ultimate goal is to have a well-maintained C++ library that can be used to end-to-end training. 
 
 ### Architectural Design
-Fortis's architecture consists of the following components: 
+gladius's architecture consists of the following components: 
 
 - `Parameter`: real-valued vectors and matrices representing weight matrices
         and bias vectors. 
@@ -20,12 +20,12 @@ Fortis's architecture consists of the following components:
         of the parameters and their gradients. 
 - `Trainer`: implements an online update rule, such as SGD or Adam. The trainer holds a 
         pointer to the model object and, therefore, the parameters it contains. 
-- `Expression`: Main data type being manipulated in a Fortis program. Each expression
+- `Expression`: Main data type being manipulated in a gladius program. Each expression
         represents a subcomputation in the computation graph. For instance, a `Parameter` 
         object can be added to the computation graph, resulting in an expression W or b. 
 
 - `Operations`: These are functions that act on expressions and return other expressions. 
-        Crucially, they are not objects. Fortis defines many different operations, including
+        Crucially, they are not objects. gladius defines many different operations, including
         addition, multiplication, softmax, tanh, etc. 
 - `Builder classes`: These define interfaces for building different networks. In our case, we
         will mostly be interested in implementing the transformer network, but one should not 
@@ -33,7 +33,7 @@ Fortis's architecture consists of the following components:
         These work on top of expressions and operations and provide easy-to-use libraries. 
         More discussion on builders below. 
 - `ComputationGraph`: Expressions are part of an implicit computation graph object, internally represented as a Directed Acyclic Graph. 
-        Fortis currently assumes that only one computation graph will exist at a time. 
+        gladius currently assumes that only one computation graph will exist at a time. 
         From the user's perspective, we create a computation graph for each new training 
         example.
         
@@ -49,7 +49,7 @@ following submodule dependencies: [cereal](https://uscilab.github.io/cereal/), [
 and [benchmark](https://github.com/google/benchmark). Then, build the library as follows (this will also build the unit tests):
 
 ```shell
-$ git clone https://github.com/BlaiseMuhirwa/fortis.git --recurse-submodules
+$ git clone https://github.com/BlaiseMuhirwa/gladius.git --recurse-submodules
 ```
 To build all unit and integration tests, you can pass an optional `tests` argument as follows
 
@@ -57,7 +57,7 @@ To build all unit and integration tests, you can pass an optional `tests` argume
 $ ./build.sh tests
 ```
 
-If you do not provide the `tests` argument, `cmake` will only build Fortis static library. 
+If you do not provide the `tests` argument, `cmake` will only build gladius static library. 
 
 Note: We currently only support Macs with x86-64 architectures. Support for more architectures will be added progressively. 
 

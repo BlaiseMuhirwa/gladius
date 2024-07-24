@@ -8,12 +8,12 @@
         of the parameters and their gradients. 
     - Trainer: implements an online update rule, such as SGD or Adam. The trainer holds a 
         pointer to the model object and, therefore, the parameters it contains. 
-    - Expression: Main data type being manipulated in a Fortis program. Each expression
+    - Expression: Main data type being manipulated in a gladius program. Each expression
         represents a subcomputation in the computation graph. For instance, a `Parameter` 
         object can be added to the computation graph, resulting in an expression W or b. 
 
     - Operations: These are functions that act on expressions and return other expressions. 
-        Crucially, they are not objects. Fortis defines many different operations, including
+        Crucially, they are not objects. gladius defines many different operations, including
         addition, multiplication, softmax, tanh, etc. 
     - Builder classes: These define interfaces for building different networks. In our case, we
         will be only interested in implementing the transformer network, but one should not 
@@ -21,11 +21,11 @@
         These work on top of expressions and operations and provide easy-to-use libraries. 
         More discussion on builders below. 
     - ComputationGraph: Expressions are part of an implicit computation graph object. 
-        Fortis currently assumes that only one computation graph will exist at a time. 
+        gladius currently assumes that only one computation graph will exist at a time. 
         From the user's perspective, we create a computation graph for each new training 
         example. 
 
-### Execution Flow in Fortis
+### Execution Flow in gladius
     1. Create a model object 
     2. Add necessary parameters and lookup parameters to the model 
     3. Create a trainer object and associate it with the model 

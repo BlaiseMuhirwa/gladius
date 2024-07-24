@@ -12,10 +12,10 @@
 #include <utility>
 #include <vector>
 
-namespace fortis::comp_graph {
+namespace gladius::comp_graph {
 
-using fortis::comp_graph::Vertex;
-using fortis::comp_graph::VertexPointer;
+using gladius::comp_graph::Vertex;
+using gladius::comp_graph::VertexPointer;
 
 class Summation final : public Vertex,
                         public std::enable_shared_from_this<Summation> {
@@ -106,6 +106,6 @@ class Summation final : public Vertex,
   }
 };
 
-}  // namespace fortis::comp_graph
+}  // namespace gladius::comp_graph
 
-CEREAL_REGISTER_TYPE(fortis::comp_graph::Summation)
+CEREAL_REGISTER_TYPE(gladius::comp_graph::Summation)

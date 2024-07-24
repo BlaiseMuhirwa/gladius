@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace fortis::comp_graph {
+namespace gladius::comp_graph {
 
 class Graph {
  public:
@@ -62,7 +62,7 @@ class Graph {
       vertex->forward();
       if (vertex->getName() == "SoftMax") {
         prediction =
-            dynamic_cast<fortis::comp_graph::SoftMaxActivation*>(vertex.get())
+            dynamic_cast<gladius::comp_graph::SoftMaxActivation*>(vertex.get())
                 ->getPredictedLabel();
       }
     }
@@ -92,4 +92,4 @@ class Graph {
   std::optional<float> _loss_value;
 };
 
-}  // namespace fortis::comp_graph
+}  // namespace gladius::comp_graph
