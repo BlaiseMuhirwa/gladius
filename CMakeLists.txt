@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.18)
 
-project(fortis_nn LANGUAGES CXX)
+project(gladius_nn LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -75,17 +75,17 @@ add_subdirectory(src/trainers)
 add_subdirectory(src/params)
 add_subdirectory(src/comp_graph/vertices)
 
-set(FORTIS_SOURCES
+set(gladius_SOURCES
     ${PROJECT_SOURCE_DIR}/src/trainers/trainer.cc
     ${PROJECT_SOURCE_DIR}/src/model.cc ${PROJECT_SOURCE_DIR}/src/attention.cc)
 
-add_library(fortis STATIC ${FORTIS_SOURCES})
+add_library(gladius STATIC ${gladius_SOURCES})
 
 target_include_directories(
-  fortis PRIVATE ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/src/comp_graph
+  gladius PRIVATE ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/src/comp_graph
                  ${PROJECT_SOURCE_DIR}/src/operations)
-set_target_properties(fortis PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_link_libraries(fortis PUBLIC OpenMP::OpenMP_CXX cereal::cereal)
+set_target_properties(gladius PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(gladius PUBLIC OpenMP::OpenMP_CXX cereal::cereal)
 
 message("===================================================")
 message(STATUS "\tProject Directory = ${PROJECT_SOURCE_DIR}")
@@ -93,6 +93,6 @@ message(STATUS "\tC++ Compiler = ${CMAKE_CXX_COMPILER}")
 message(STATUS "\tCMake Source Dir = ${CMAKE_CURRENT_SOURCE_DIR}")
 message(STATUS "\tCMake Binary Dir = ${CMAKE_BINARY_DIR}")
 message(STATUS "\tSource Files = ")
-foreach(SOURCE_FILE IN LISTS FORTIS_SOURCES)
+foreach(SOURCE_FILE IN LISTS gladius_SOURCES)
   message(STATUS "\t ${SOURCE_FILE}")
-endforeach(SOURCE_FILE IN LISTS FORTIS_SOURCES)
+endforeach(SOURCE_FILE IN LISTS gladius_SOURCES)

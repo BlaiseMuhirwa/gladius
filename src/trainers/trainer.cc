@@ -6,7 +6,7 @@
 #include <omp.h>
 #include <stdexcept>
 
-namespace fortis::trainers {
+namespace gladius::trainers {
 
 GradientDescentTrainer::GradientDescentTrainer(std::shared_ptr<Model> model,
                                                float learning_rate)
@@ -47,4 +47,4 @@ void GradientDescentTrainer::zeroOutGradients() {
 
 std::shared_ptr<Model> GradientDescentTrainer::getModel() { return _model; }
 
-}  // namespace fortis::trainers
+}  // namespace gladius::trainers

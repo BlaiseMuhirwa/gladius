@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace fortis::parameters {
+namespace gladius::parameters {
 
 enum class ParameterType { WeightParameter, BiasParameter };
 
@@ -18,7 +18,7 @@ class Parameter {
       : _value(std::move(input)) {
     if (_value.empty()) {
       throw std::invalid_argument(
-          "Fortis parameter initialization requires a non-empty vector(s).");
+          "gladius parameter initialization requires a non-empty vector(s).");
     }
     auto total_parameters = getParameterCount();
     _gradient = std::vector<float>(total_parameters, 0.F);
@@ -122,4 +122,4 @@ class Parameter {
   }
 };
 
-}  // namespace fortis::parameters
+}  // namespace gladius::parameters

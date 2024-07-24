@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace fortis::comp_graph {
+namespace gladius::comp_graph {
 
 // class Vertex;
 // using VertexPointer = std::shared_ptr<Vertex>;
@@ -152,4 +152,4 @@ class Vertex {
 };
 using VertexPointer = std::shared_ptr<Vertex>;
 
-}  // namespace fortis::comp_graph
+}  // namespace gladius::comp_graph

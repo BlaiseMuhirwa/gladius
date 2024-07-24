@@ -21,20 +21,20 @@
 #include <omp.h>
 #endif
 
-namespace fortis::tests {
+namespace gladius::tests {
 
-using fortis::comp_graph::CrossEntropyLoss;
-using fortis::comp_graph::InnerProduct;
-using fortis::comp_graph::InputVertex;
-using fortis::comp_graph::ParameterVertex;
-using fortis::comp_graph::ReLUActivation;
-// using fortis::comp_graph::SoftMaxActivation;
-using fortis::comp_graph::Summation;
-// using fortis::comp_graph::TanHActivation;
-using fortis::comp_graph::Vertex;
-using fortis::comp_graph::VertexPointer;
-using fortis::parameters::ParameterType;
-using fortis::trainers::GradientDescentTrainer;
+using gladius::comp_graph::CrossEntropyLoss;
+using gladius::comp_graph::InnerProduct;
+using gladius::comp_graph::InputVertex;
+using gladius::comp_graph::ParameterVertex;
+using gladius::comp_graph::ReLUActivation;
+// using gladius::comp_graph::SoftMaxActivation;
+using gladius::comp_graph::Summation;
+// using gladius::comp_graph::TanHActivation;
+using gladius::comp_graph::Vertex;
+using gladius::comp_graph::VertexPointer;
+using gladius::parameters::ParameterType;
+using gladius::trainers::GradientDescentTrainer;
 
 static inline const char* TRAIN_DATA = "data/train-images-idx3-ubyte";
 static inline const char* TRAIN_LABELS = "data/train-labels-idx1-ubyte";
@@ -47,7 +47,7 @@ static inline constexpr uint32_t FETCH_COUNT = 300;
 static inline constexpr uint32_t TRAIN_COUNT = 0.75 * FETCH_COUNT;
 
 static void initializeParameters(
-    std::shared_ptr<fortis::Model>& model,
+    std::shared_ptr<gladius::Model>& model,
     std::vector<std::tuple<ParameterType, std::vector<uint32_t>>>& parameters) {
   for (auto& [param_type, dimensions] : parameters) {
     model->addParameter(/* dimensions = */ std::move(dimensions));
@@ -89,10 +89,10 @@ static float computeAccuracy(std::vector<uint32_t>& predicted_labels,
   return static_cast<float>(correct_predictions) / total_labels;
 }
 
-static std::unique_ptr<fortis::comp_graph::Graph> buildComputationGraph(
-    std::shared_ptr<fortis::Model>& model, std::vector<float>& input_sample,
+static std::unique_ptr<gladius::comp_graph::Graph> buildComputationGraph(
+    std::shared_ptr<gladius::Model>& model, std::vector<float>& input_sample,
     std::vector<uint32_t>& label) {
-  auto computation_graph = std::make_unique<fortis::comp_graph::Graph>();
+  auto computation_graph = std::make_unique<gladius::comp_graph::Graph>();
   auto input_vertex = std::make_shared<InputVertex>(input_sample);
   computation_graph->addVertex(input_vertex);
 
@@ -184,7 +184,7 @@ static void train(
 }  
 
 static float evaluate(
-    std::shared_ptr<fortis::Model>&& model,
+    std::shared_ptr<gladius::Model>&& model,
     std::vector<std::pair<std::vector<float>, std::vector<uint32_t>>>&
         dataset) {
   std::vector<uint32_t> predictions;
@@ -204,8 +204,8 @@ static float evaluate(
   return accuracy;
 }
 
-TEST(FortisMLPMnist, TestAccuracyScore) {
-  auto dataset = fortis::utils::readMNISTDataset(
+TEST(gladiusMLPMnist, TestAccuracyScore) {
+  auto dataset = gladius::utils::readMNISTDataset(
       /* images_filename = */ TRAIN_DATA, /* labels_filename = */ TRAIN_LABELS,
       /* chunk_size = */ FETCH_COUNT);
 
@@ -219,7 +219,7 @@ TEST(FortisMLPMnist, TestAccuracyScore) {
       std::vector<std::pair<std::vector<float>, std::vector<uint32_t>>>(
           dataset.begin() + TRAIN_COUNT + 1, dataset.end());
 
-  std::shared_ptr<fortis::Model> model(new Model());
+  std::shared_ptr<gladius::Model> model(new Model());
   auto weights_and_biases_parameters = defineModelParameters();
 
   initializeParameters(/* model = */ model,
@@ -237,4 +237,4 @@ TEST(FortisMLPMnist, TestAccuracyScore) {
 
 }  
 
-}  // namespace fortis::tests
+}  // namespace gladius::tests

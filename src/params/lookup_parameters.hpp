@@ -5,7 +5,7 @@
 #include <memory>
 #include <optional>
 #include <vector>
-namespace fortis::parameters {
+namespace gladius::parameters {
 
 class LookupParameter {
  public:
@@ -40,4 +40,4 @@ class LookupParameter {
   }
 };
 
-}  // namespace fortis::parameters
+}  // namespace gladius::parameters
